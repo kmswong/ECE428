@@ -1,7 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.util.*;
-
 
 class clientUDP {
     // Constants.
@@ -24,9 +22,10 @@ class clientUDP {
 
     public void sendPlayers() {
         // read the input file
-        FileReader inputStream = new BufferedReader(new FileReader(filename));
+        BufferedReader inputStream = null;
 
         try {
+            inputStream = new BufferedReader(new FileReader(filename));
             // send the country data to the server first
             this.sendPacket(this.country);
 
@@ -39,11 +38,11 @@ class clientUDP {
 
             // tell the server that we are done sending data
             this.sendPacket("DONE");
+
+            inputStream.close();
         }
-        finally {
-            if (in != null) {
-                in.close();
-            }
+        catch (Exception e) {
+            System.out.println("[ERROR] Error sending players to server.");
         }
     }
 
@@ -52,13 +51,19 @@ class clientUDP {
         buf = data.getBytes();
         DatagramPacket packet = new DatagramPacket(buf, buf.length,
                                                    this.address, this.port);
-        this.socket.send(packet);
+        try {
+            this.socket.send(packet);
+        }
+        catch (Exception e) {
+            System.out.println("[ERROR] Error sending packet to server.");
+        }
     }
 
     public void receivePlayers() {
-        FileWriter outputStream = new PrintWriter(new FileWriter("out.dat"));
+        PrintWriter outputStream = null;
 
         try {
+            outputStream = new PrintWriter(new FileWriter("out.dat"));
             String received = this.receivePacket();
             int numPlayers = Integer.parseInt(received);
 
@@ -66,23 +71,28 @@ class clientUDP {
                 outputStream.println(this.country + " did not qualify for the world cup.");
             }
             else {
-                for (int i = 0; i < Integer.parseInt(numPlayers); i++) {
+                for (int i = 0; i < numPlayers; i++) {
                     String player = this.receivePacket();
-                    outputStream.println(player)
+                    outputStream.println(player);
                 }
             }
+
+            outputStream.close();
         }
-        finally {
-            if (outputStream != null) {
-                outputStream.close();
-            }
+        catch (Exception e) {
+            System.out.println("[ERROR] Error receiving players from server.");
         }
     }
 
     private String receivePacket() {
-        byte[] buf new byte[1024];
-        packet = new DatagramPacket(buf, buf.length);
-        this.socket.receive(packet);
+        byte[] buf = new byte[1024];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+        try {
+            this.socket.receive(packet);
+        }
+        catch (Exception e) {
+            System.out.println("[ERROR] Error receiving packet from server.");
+        }
         return new String(packet.getData(), 0, packet.getLength());
     }
 
@@ -117,10 +127,11 @@ class clientUDP {
         }
         
         // pick up port from server-generated file
-        int port = this.getPortNumber();
+        int port = getPortNumber();
 
         // create a datagram socket
-        DatagramSocket socket = new DatagramSocket(IP, port);
+        InetAddress address = InetAddress.getByName(IP);
+        DatagramSocket socket = new DatagramSocket(port, address);
 
         clientUDP client = new clientUDP(args[0], args[1], socket);
         // send country and player data to server
