@@ -26,32 +26,25 @@ public class serverTCP {
         
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        String int1,int2;
-	    int num1=0,num2=0;
-
-	out.println("server: Connected");//uncomment for debug
- 
- 
- 
-	int1 = in.readLine();
-	System.out.println(int1);
-	int2 = in.readLine();
-	System.out.println("*"+int2);
-
 
 	try
 	{  
-        num1=Integer.parseInt(int1);
-        num2=Integer.parseInt(int2);
+		String country = in.readLine();
+		System.out.println( country );
+		int num_of_players = Integer.parseInt( in.readLine() );
+		System.out.println( num_of_players );
+		
+		for( int x = 0; x < num_of_players; x++ ) {
+			String player = in.readLine();
+System.out.println( player );
+		}
+
         }
         catch(NumberFormatException nfe)
         {
         	System.out.println("Numbers not intergers");
         	out.println("Numbers not intergers");
         }
-        System.out.println("="+num1*num2);
-        out.println(String.valueOf(num1*num2));
-        
         
         
         out.close();
