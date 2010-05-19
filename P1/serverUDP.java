@@ -3,55 +3,120 @@ import java.net.*;
 import java.util.*;
 
 public class serverUDP extends Thread {
+    // Constants.
+    private static final int ARGS_LENGTH = 0;
+    private static final int ERROR_CODE = 1;
+    private static final String PORT_FILENAME = "portTCP.ini";
+    private static final String TERMINATION = "done";
 
-    protected DatagramSocket socket = null;
-    protected BufferedReader in = null;
-    protected HashTable teams = null;
-    protected ArrayList players = null;
+    public static void main(String[] args) throws IOException {
+        System.out.println("RUNNING serverUDP");
 
-    public UDPServerThread() throws IOException {
-        this("UDPServerThread");
-    }
-
-    public UDPServerThread(String name) throws IOException {
-        super(name);
-        socket = new DatagramSocket(13524);
-        teams = new HashTable();
-        players = new ArrayList();
-
-        try {
-            in = new BufferedReader(new FileReader("in.dat"));
-        } catch (FileNotFoundException e) {
-            System.err.println("Could not open quote file. Serving time instead.");
+        
+        // If the number of arguments do not match what is expected. Show how the 
+        // program should be used and exit the program.
+        if (args.length != ARGS_LENGTH)
+        {
+            showUsage();
         }
-    }
 
-    public void run() {
+        DatagramSocket serverSocket = null;
+        try 
+        {
+            serverSocket = new DatagramSocket();
+            serverSocket.bind(null);
+        }
+        catch (IOException e)
+        {
+            System.err.println("[ERROR] Could not listen on port: " + e.getMessage());
+            System.exit(ERROR_CODE);
+        }
+        
+        // Write the port to the port filename so that the client knows which port to use to
+        // establish the connection.
+        writePortNumber(serverSocket.getLocalPort());
 
+        ArrayList playersInCountry = new ArrayList();
+        String country = "";
+        DatagramPacket packet = null;
+        byte[] buf = null; 
         for (;;) {
             try {
-                byte[] buf = new byte[256];
+                buf = new byte[1024];
 
                 // receive request
-                DatagramPacket packet = new DatagramPacket(buf, buf.length);
-                socket.receive(packet);
+                packet = new DatagramPacket(buf, buf.length);
+                serverSocket.receive(packet);
 
-                // figure out response
-                buf = packet.getData()
+                String receivedData = new String(packet.getData());
+                if (receivedData.equalsIgnoreCase(TERMINATION)) {
+                    break;
+                }
 
-                // send the response to the client at "address" and "port"
+                String[] playerAndCountry = receivedData.trim().split(" ");
+                if (playerAndCountry.length > 1 && playerAndCountry[0].equalsIgnoreCase(country)) {
+                    playersInCountry.add(playerAndCountry[0]);
+                } else if (playerAndCountry.length == 1) {
+                    country = playerAndCountry[0];
+                }   
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        InetAddress address = packet.getAddress();
-        int port = packet.getPort();
-        packet = new DatagramPacket(buf, buf.length, address, port);
-        socket.send(packet);
-        socket.close();
+
+        if (packet != null) {
+            InetAddress address = packet.getAddress();
+            int port = packet.getPort();
+
+            for (int i = 0; i < playersInCountry.size(); i++) {
+                String sendData = (String)playersInCountry.get(i);
+                buf = sendData.getBytes();
+                packet = new DatagramPacket(buf, buf.length, address, port);
+                serverSocket.send(packet);
+                serverSocket.close();
+            }
+        }
     }
 
-    public static void main(String[] args) throws IOException {
-      new serverUDP().start();
+    
+    /**
+     * Display a usage message to inform the user how to use this program in the command line.
+     * This method also exits the program as well.
+     */
+    private static void showUsage()
+    {
+        System.err.println("USAGE: java serverUDP");
+        System.exit(ERROR_CODE);
+    }
+
+
+    /**
+     * Write the port to the port filename so that the client knows which port to use to
+     * establish the connection.
+     *
+     * Args:
+     *   port                The port to write to port file. 
+     */
+    private static void writePortNumber(int port)
+    {
+        try
+        {
+            File file = new File(PORT_FILENAME);
+            if(file.exists())
+            {
+                file.delete();
+                System.out.println("file deleted first");
+            }
+            
+            FileWriter fstream = new FileWriter(PORT_FILENAME);
+            BufferedWriter toPortFile = new BufferedWriter(fstream);
+            
+            toPortFile.write(String.valueOf(port));
+            toPortFile.close();
+        }
+        catch (IOException e)
+        {
+            System.err.println("[ERROR] Cannot write port to port file");
+        }
     }
 }
