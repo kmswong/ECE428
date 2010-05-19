@@ -6,6 +6,8 @@ public class serverUDP extends Thread {
 
     protected DatagramSocket socket = null;
     protected BufferedReader in = null;
+    protected HashTable teams = null;
+    protected ArrayList players = null;
 
     public UDPServerThread() throws IOException {
         this("UDPServerThread");
@@ -14,6 +16,8 @@ public class serverUDP extends Thread {
     public UDPServerThread(String name) throws IOException {
         super(name);
         socket = new DatagramSocket(13524);
+        teams = new HashTable();
+        players = new ArrayList();
 
         try {
             in = new BufferedReader(new FileReader("in.dat"));
@@ -24,27 +28,26 @@ public class serverUDP extends Thread {
 
     public void run() {
 
-        try {
-            byte[] buf = new byte[256];
+        for (;;) {
+            try {
+                byte[] buf = new byte[256];
 
-            // receive request
-            DatagramPacket packet = new DatagramPacket(buf, buf.length);
-            socket.receive(packet);
+                // receive request
+                DatagramPacket packet = new DatagramPacket(buf, buf.length);
+                socket.receive(packet);
 
-            // figure out response
-            String dString = null;
-            if (in == null)
-                dString = new Date().toString();
-            buf = dString.getBytes();
+                // figure out response
+                buf = packet.getData()
 
-            // send the response to the client at "address" and "port"
-            InetAddress address = packet.getAddress();
-            int port = packet.getPort();
-            packet = new DatagramPacket(buf, buf.length, address, port);
-            socket.send(packet);
-        } catch (IOException e) {
-            e.printStackTrace();
+                // send the response to the client at "address" and "port"
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+        InetAddress address = packet.getAddress();
+        int port = packet.getPort();
+        packet = new DatagramPacket(buf, buf.length, address, port);
+        socket.send(packet);
         socket.close();
     }
 

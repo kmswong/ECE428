@@ -11,42 +11,55 @@ class clientUDP {
         }
         String filename = args[0];
         String country = args[1];
-
-        ArrayList players = new ArrayList();
-
-        Scanner s = null;
-        try {
-            s = new Scanner(new BufferedReader(new FileReader(filename)));
-            while (s.hasNext()) {
-                players.add((Object)(s.next()));
-            }
-        }
-        finally {
-              if (s != null) {
-                  s.close();
-              }
-        }
+        FileReader inputStream = null;
+        FileWriter outputStream = null;
 
         // get a datagram socket
         DatagramSocket socket = new DatagramSocket();
 
         // send request
-        byte[] buf = new byte[256];
+        byte[] buf;
         InetAddress address = InetAddress.getByName("127.0.0.1");
 
-        for (int i = 0; i < players.size(); i++) {
-
+        try {
+            inputStream = new BufferedReader(new FileReader(filename));
+            String line;
+            while ((line = inputSteam.readLine()) != null) {
+                buf = line.getBytes();
+                DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 13524);
+                socket.send(packet);
+            }
+            buf = country.getBytes();
+            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 13524);
+            socket.send(packet);
+            buf = new String("DONE").getButes();
             DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 13524);
             socket.send(packet);
         }
+        finally {
+            if (in != null) {
+                in.close();
+            }
+        }
 
         // get response
-        packet = new DatagramPacket(buf, buf.length);
-        socket.receive(packet);
-
-        // display response
-        String received = new String(packet.getData(), 0, packet.getLength());
-        System.out.println("Quote of the Moment: " + received);
+        try {
+            outputStream = new PrintWriter(new FileWriter("out.dat"));
+            for (;;) {
+                packet = new DatagramPacket(buf, buf.length);
+                socket.receive(packet);
+                String received = new String(packet.getData(), 0, packet.getLength());
+                if (received.equals("DONE")) {
+                    break;
+                }
+                outputStream.println(received)
+            }
+        }
+        finally {
+            if (outputStream != null) {
+                outputStream.close();
+            }
+        }
 
         socket.close();
     }
