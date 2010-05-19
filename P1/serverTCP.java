@@ -31,22 +31,22 @@ public class serverTCP {
 		int numOfLines = Integer.parseInt( in.readLine() );
 
 		// Check if country is found by checking if there are number of plaeyrs
-		if( numOfLines == 0 ) {
-			out.println( 0 );
-			out.println( country + " did not qualify to the world cup" );
-		} else {
-			ArrayList listOfPlayers = new ArrayList();
-			
-			for( int x = 0; x < numOfLines; x++ ) {
-				listOfPlayers.add(in.readLine());
-			}
+		ArrayList listOfPlayers = new ArrayList();
+		
+		for( int x = 0; x < numOfLines; x++ ) {
+			listOfPlayers.add(in.readLine());
+		}
 
-			//process the players
-			ArrayList processedPlayers = getPlayersInCountry( country, listOfPlayers );
-			out.println( processedPlayers.size() );
+		//process the players
+		ArrayList processedPlayers = getPlayersInCountry( country, listOfPlayers );
+		out.println( processedPlayers.size() );
+
+		if( processedPlayers.size() > 0 ) { 
 			for( int x = 0; x < processedPlayers.size(); x++ ) {
 				out.println( processedPlayers.get(x) );
 			}
+		} else { 
+			out.println( country + " did not qualify to the world cup" );
 		}
 
         }
