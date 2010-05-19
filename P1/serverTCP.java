@@ -1,9 +1,9 @@
 import java.net.*;
 import java.io.*;
+import java.util.*;
 
 public class serverTCP {
 	public static void main( String args[] ) throws IOException {
-		System.out.println("host name: " + InetAddress.getLocalHost());
 		ServerSocket serverSocket = null;
 
 		try {
@@ -14,7 +14,6 @@ public class serverTCP {
             System.exit(1);
         }
 
-	System.out.println(serverSocket.getLocalSocketAddress()); 
         Socket clientSocket = null;
         try {
             clientSocket = serverSocket.accept();
@@ -22,7 +21,6 @@ public class serverTCP {
             System.err.println("Accept failed.");
             System.exit(1);
         }
-	System.out.println("Connected");
         
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -30,13 +28,25 @@ public class serverTCP {
 	try
 	{  
 		String country = in.readLine();
-		System.out.println( country );
-		int num_of_players = Integer.parseInt( in.readLine() );
-		System.out.println( num_of_players );
-		
-		for( int x = 0; x < num_of_players; x++ ) {
-			String player = in.readLine();
-System.out.println( player );
+		int numOfLines = Integer.parseInt( in.readLine() );
+
+		// Check if country is found by checking if there are number of plaeyrs
+		if( numOfLines == 0 ) {
+			out.println( 0 );
+			out.println( country + " did not qualify to the world cup" );
+		} else {
+			ArrayList listOfPlayers = new ArrayList();
+			
+			for( int x = 0; x < numOfLines; x++ ) {
+				listOfPlayers.add(in.readLine());
+			}
+
+			//process the players
+			ArrayList processedPlayers = getPlayersInCountry( country, listOfPlayers );
+			out.println( processedPlayers.size() );
+			for( int x = 0; x < processedPlayers.size(); x++ ) {
+				out.println( processedPlayers.get(x) );
+			}
 		}
 
         }
@@ -52,4 +62,18 @@ System.out.println( player );
         clientSocket.close();
         serverSocket.close();
     }
+
+    private static ArrayList getPlayersInCountry( String country, ArrayList listOfPlayers )
+    {
+	ArrayList listOfPlayersInCountry = new ArrayList();
+	// Iterate through each player and store the ones in the specified country 
+	for( int x = 0; x < listOfPlayers.size(); x++ ) {
+		String[] playerAndCountry = ((String)listOfPlayers.get(x)).split(" ");
+		if( playerAndCountry[1].equals( country ) ) {
+			listOfPlayersInCountry.add( playerAndCountry[0] );
+		}
+	}
+
+	return listOfPlayersInCountry;
+    }	
 }
