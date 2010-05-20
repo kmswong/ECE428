@@ -6,8 +6,8 @@ public class serverUDP extends Thread {
     // Constants.
     private static final int ARGS_LENGTH = 0;
     private static final int ERROR_CODE = 1;
-    private static final String PORT_FILENAME = "portTCP.ini";
-    private static final String TERMINATION = "done";
+    private static final String PORT_FILENAME = "portUDP.ini";
+    private static final String TERMINATION = "DONE";
 
     public static void main(String[] args) throws IOException {
         System.out.println("RUNNING serverUDP");
@@ -24,7 +24,8 @@ public class serverUDP extends Thread {
         try 
         {
             serverSocket = new DatagramSocket();
-            serverSocket.bind(null);
+            serverSocket.setReuseAddress(true);
+            //serverSocket.bind(null);
         }
         catch (IOException e)
         {
@@ -34,6 +35,7 @@ public class serverUDP extends Thread {
         
         // Write the port to the port filename so that the client knows which port to use to
         // establish the connection.
+        System.out.println(serverSocket.getLocalPort());
         writePortNumber(serverSocket.getLocalPort());
 
         ArrayList playersInCountry = new ArrayList();
@@ -49,12 +51,12 @@ public class serverUDP extends Thread {
                 serverSocket.receive(packet);
 
                 String receivedData = new String(packet.getData());
-                if (receivedData.equalsIgnoreCase(TERMINATION)) {
+                if (receivedData.trim().equalsIgnoreCase(TERMINATION)) {
                     break;
                 }
 
                 String[] playerAndCountry = receivedData.trim().split(" ");
-                if (playerAndCountry.length > 1 && playerAndCountry[0].equalsIgnoreCase(country)) {
+                if (playerAndCountry.length > 1 && playerAndCountry[1].equalsIgnoreCase(country)) {
                     playersInCountry.add(playerAndCountry[0]);
                 } else if (playerAndCountry.length == 1) {
                     country = playerAndCountry[0];
@@ -68,14 +70,21 @@ public class serverUDP extends Thread {
             InetAddress address = packet.getAddress();
             int port = packet.getPort();
 
+            // send number of players
+            String numPlayers = Integer.toString(playersInCountry.size());
+            System.out.println("Number of players in country: " + playersInCountry.size());
+            buf = numPlayers.getBytes();
+            packet = new DatagramPacket(buf, buf.length, address, port);
+            serverSocket.send(packet);
+
             for (int i = 0; i < playersInCountry.size(); i++) {
                 String sendData = (String)playersInCountry.get(i);
                 buf = sendData.getBytes();
                 packet = new DatagramPacket(buf, buf.length, address, port);
                 serverSocket.send(packet);
-                serverSocket.close();
             }
         }
+        serverSocket.close();
     }
 
     
@@ -105,7 +114,7 @@ public class serverUDP extends Thread {
             if(file.exists())
             {
                 file.delete();
-                System.out.println("file deleted first");
+                //System.out.println("file deleted first");
             }
             
             FileWriter fstream = new FileWriter(PORT_FILENAME);
@@ -113,6 +122,7 @@ public class serverUDP extends Thread {
             
             toPortFile.write(String.valueOf(port));
             toPortFile.close();
+            //System.out.println("Port written to file: " + PORT_FILENAME);
         }
         catch (IOException e)
         {
