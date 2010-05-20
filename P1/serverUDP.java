@@ -68,7 +68,7 @@ public class serverUDP {
                 }
 
                 String[] playerAndCountry = receivedData.trim().split(" ");
-                if (playerAndCountry.length > 1 && playerAndCountry[1].equalsIgnoreCase(country)) {
+                if (playerAndCountry.length > 1 && playerAndCountry[1].equals(country)) {
                     playersInCountry.add(playerAndCountry[0]);
                 } else if (playerAndCountry.length == 1) {
                     country = playerAndCountry[0];
