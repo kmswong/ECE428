@@ -5,6 +5,7 @@ class clientUDP {
     // Constants.
 	private static final String IP = "127.0.0.1";
 	private static final String PORT_FILENAME = "portUDP.ini";
+    private static final String TERMINATION_STRING = "DONE";
 
     // Variables
     private String filename;
@@ -13,11 +14,16 @@ class clientUDP {
     private int port;
     private InetAddress address  = null;
 
-    public clientUDP(String filename, String country, DatagramSocket socket) {
+    public clientUDP(String filename, String country, DatagramSocket socket, int port) {
         this.filename = filename;
         this.country = country;
         this.socket = socket;
-        this.address = this.socket.getInetAddress();
+        try {
+            this.address = InetAddress.getByName(IP);
+        }
+        catch (Exception e) {
+        }
+        this.port = port;
     }
 
     public void sendPlayers() {
@@ -37,7 +43,7 @@ class clientUDP {
             }
 
             // tell the server that we are done sending data
-            this.sendPacket("DONE");
+            this.sendPacket(TERMINATION_STRING);
 
             inputStream.close();
         }
@@ -55,7 +61,7 @@ class clientUDP {
             this.socket.send(packet);
         }
         catch (Exception e) {
-            System.out.println("[ERROR] Error sending packet to server.");
+            System.out.println("[ERROR] Error sending packet to server: " + e.getMessage());
         }
     }
 
@@ -127,19 +133,23 @@ class clientUDP {
         }
         
         // pick up port from server-generated file
+        System.out.println("Getting port number");
         int port = getPortNumber();
+        System.out.println("Port number is: " + port);
 
         // create a datagram socket
-        InetAddress address = InetAddress.getByName(IP);
-        DatagramSocket socket = new DatagramSocket(port, address);
+        DatagramSocket socket = new DatagramSocket();
 
-        clientUDP client = new clientUDP(args[0], args[1], socket);
+        clientUDP client = new clientUDP(args[0], args[1], socket, port);
         // send country and player data to server
+        System.out.println("Sending players");
         client.sendPlayers();
 
         // receive team player list from server
+        System.out.println("Receiving players");
         client.receivePlayers();
 
+        System.out.println("DONE. Closing socket");
         // close the socket
         socket.close();
     }
