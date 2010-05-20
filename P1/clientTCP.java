@@ -28,8 +28,6 @@ public class clientTCP
 	 */
 	public static void main(String [] args)
 	{
-		System.out.println("RUNNING clientTCP");
-
 		// If the number of arguments do not match what is expected. Show how the 
 		// program should be used and exit the program.
 		if (args.length != ARGS_LENGTH)
@@ -59,7 +57,6 @@ public class clientTCP
 			socket = new Socket(IP, port);
 			toServer = new PrintWriter(socket.getOutputStream(), true);
 			fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
 		
 			// Send country to server.
 			toServer.println(country);
@@ -73,7 +70,7 @@ public class clientTCP
 				
 				toServer.println(players.get(i).toString());
 			}
-
+			
 			FileWriter fstream = new FileWriter(OUTPUT_FILENAME);
 			BufferedWriter toFile = new BufferedWriter(fstream);
 			
@@ -85,18 +82,16 @@ public class clientTCP
 			if(numPlayers == 0)
 			{
 				String msg = fromServer.readLine();
-				System.out.println(msg);
-				toFile.write(msg);
+				toFile.write(msg + "\n");
 			}
-			// Otherwise, MORE HERE
+			// Otherwise, read each player name from the server and write it out to outTCP.dat.
 			else 
 			{
 				// Read the players that are returned by the server.
 				for(int i = 0; i < numPlayers; i++)
 				{
 					String player = fromServer.readLine();
-					System.out.println(i + ": " + player);
-					toFile.write(player);
+					toFile.write(player + "\n");
 				}
 			}
 			
@@ -116,8 +111,6 @@ public class clientTCP
 			System.err.println(e.getMessage());
 			System.exit(ERROR_CODE);
 		}
-		
-		System.out.println("STOPPING clientTCP");		
 	}
 
 	/**
@@ -153,7 +146,7 @@ public class clientTCP
 		return players;
 	}
 	
-	/*
+	/**
 	 * Busy loop to wait for the port filename to exist. If it does, the method retrieves the port number.
 	 */
 	private static int getPortNumber()

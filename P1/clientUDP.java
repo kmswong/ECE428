@@ -1,10 +1,23 @@
+/**
+* clientUDP.java
+* Author: John Huang
+* Course: ECE428
+* Written in 2010
+*/
+
 import java.io.*;
 import java.net.*;
 
-class clientUDP {
-    // Constants.
+/**
+* The client class that uses the UDP protocol to implement the World Cup players program. The program
+* makes use of a file that reads what port the serverUDP is listening to. At the end of the execution,
+* the client deletes that port file.
+*/
+public class clientUDP {
+    // Constants
 	private static final String IP = "127.0.0.1";
 	private static final String PORT_FILENAME = "portUDP.ini";
+	private static final String OUTPUT_FILENAME = "outUDP.dat";
     private static final String TERMINATION_STRING = "DONE";
 
     // Variables
@@ -14,6 +27,15 @@ class clientUDP {
     private int port;
     private InetAddress address  = null;
 
+	/**
+	 * Constructor for clientUDP.
+	 *
+	 * Args:
+	 *   filename			The filename that consists the number of players.
+	 *   country			The country used to filter the list of players.
+	 *   socket				The socket connection used to the UDP server.
+	 *   port				The port used to connect to the UDP server.
+	 */
     public clientUDP(String filename, String country, DatagramSocket socket, int port) {
         this.filename = filename;
         this.country = country;
@@ -21,37 +43,47 @@ class clientUDP {
         try {
             this.address = InetAddress.getByName(IP);
         }
-        catch (Exception e) {
+        catch (UnknownHostException e) {
+			System.err.println("[ERROR]: Unable to retrieve IP.");
         }
         this.port = port;
     }
 
+	/**
+	 * Sends the list of players to the UDP server.
+	 */
     public void sendPlayers() {
-        // read the input file
+        // Read the input file.
         BufferedReader inputStream = null;
 
         try {
             inputStream = new BufferedReader(new FileReader(filename));
-            // send the country data to the server first
+            // Send the country data to the server first.
             this.sendPacket(this.country);
 
-            // loop through the lines in the file and send each one to the
-            // server after it has been read
+            // Loop through the lines in the file and send each one to the
+            // server after it has been read.
             String line;
             while ((line = inputStream.readLine()) != null) {
                 this.sendPacket(line);
             }
 
-            // tell the server that we are done sending data
+            // Tell the server that we are done sending data.
             this.sendPacket(TERMINATION_STRING);
 
             inputStream.close();
         }
         catch (Exception e) {
-            System.out.println("[ERROR] Error sending players to server.");
+            System.err.println("[ERROR] Error sending players to server.");
         }
     }
 
+	/**
+	 * Sends a packet to the UDP server.
+	 *
+	 * Args:
+	 *   data				The string of data to send to the UDP server.
+	 */
     private void sendPacket(String data) {
         byte[] buf;
         buf = data.getBytes();
@@ -61,15 +93,18 @@ class clientUDP {
             this.socket.send(packet);
         }
         catch (Exception e) {
-            System.out.println("[ERROR] Error sending packet to server: " + e.getMessage());
+            System.err.println("[ERROR] Error sending packet to server: " + e.getMessage());
         }
     }
 
+	/**
+	 * Method to recieve the processed players from the server.	 
+	 */
     public void receivePlayers() {
         PrintWriter outputStream = null;
 
         try {
-            outputStream = new PrintWriter(new FileWriter("out.dat"));
+            outputStream = new PrintWriter(new FileWriter(OUTPUT_FILENAME));
             String received = this.receivePacket();
             int numPlayers = Integer.parseInt(received);
 
@@ -86,10 +121,13 @@ class clientUDP {
             outputStream.close();
         }
         catch (Exception e) {
-            System.out.println("[ERROR] Error receiving players from server.");
+            System.err.println("[ERROR] Error receiving players from server.");
         }
     }
 
+	/**
+	 * Method to receive packet from the server.
+	 */
     private String receivePacket() {
         byte[] buf = new byte[1024];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
@@ -97,11 +135,14 @@ class clientUDP {
             this.socket.receive(packet);
         }
         catch (Exception e) {
-            System.out.println("[ERROR] Error receiving packet from server.");
+            System.err.println("[ERROR] Error receiving packet from server.");
         }
         return new String(packet.getData(), 0, packet.getLength());
     }
 
+	/**
+	 * Busy loop to wait for the port filename to exist. If it does, the method retrieves the port number.
+	 */
     private static int getPortNumber() {
         int port = -1;
 
@@ -125,34 +166,31 @@ class clientUDP {
 		}
         return port;
     }
-
+	
+	/**
+	 * Main Method.
+	 */
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
-             System.out.println("Usage: java clientUDP [filename] [country]");
+             System.out.println("USAGE: java clientUDP [filename] [country]");
              return;
         }
         
-        // pick up port from server-generated file
-        System.out.println("Getting port number");
+        // Pick up port from server-generated file.
         int port = getPortNumber();
-        System.out.println("Port number is: " + port);
 
-        // create a datagram socket
+        // Create a datagram socket.
         DatagramSocket socket = new DatagramSocket();
 
         clientUDP client = new clientUDP(args[0], args[1], socket, port);
-        // send country and player data to server
-        System.out.println("Sending players");
+		
+        // Send country and player data to server.
         client.sendPlayers();
 
-        // receive team player list from server
-        System.out.println("Receiving players");
+        // Receive team player list from server.
         client.receivePlayers();
-
-        System.out.println("DONE. Closing socket");
-        // close the socket
+		
+        // Close the socket.
         socket.close();
     }
 }
-
- 

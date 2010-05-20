@@ -18,16 +18,14 @@ import java.util.*;
 public class serverTCP 
 {
 	// Constants.
-	private static final String IP = "127.0.0.1";
 	private static final int ARGS_LENGTH = 0;
-	private static final int ERROR_CODE = 1;
 	private static final String PORT_FILENAME = "portTCP.ini";
+	private static final int ERROR_CODE = 1;
 
 	/**
 	 * Main method.
 	 */
 	public static void main( String args[] ) throws IOException {
-		System.out.println("RUNNING clientTCP");
 
 		// If the number of arguments do not match what is expected. Show how the 
 		// program should be used and exit the program.
@@ -51,7 +49,6 @@ public class serverTCP
 		// Write the port to the port filename so that the client knows which port to use to
 		// establish the connection.
 		writePortNumber(serverSocket.getLocalPort());
-		
 
         Socket clientSocket = null;
         try 
@@ -122,7 +119,7 @@ public class serverTCP
 	 */
 	private static void showUsage()
 	{
-		System.err.println("USAGE: java serverTCP");
+		System.out.println("USAGE: java serverTCP");
 		System.exit(ERROR_CODE);
 	}
 
@@ -167,7 +164,6 @@ public class serverTCP
 			if(file.exists())
 			{
 				file.delete();
-				System.out.println("file deleted first");
 			}
 			
 			FileWriter fstream = new FileWriter(PORT_FILENAME);

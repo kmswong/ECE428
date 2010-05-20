@@ -1,18 +1,31 @@
+/**
+* serverUDP.java
+* Author: Kevin Xiao Long Lu
+* Course: ECE428
+* Written in 2010
+*/
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class serverUDP extends Thread {
+/**
+* The server class that retrieves a country and a list of players from clientUDP and returns back to the client
+* only the players that are playing for that country using the UDP protocol. To establish a connection, the
+* server randomly selects a port, and writes this port number to a file, expecting the client to read the port
+* number off this file.
+*/
+public class serverUDP {
     // Constants.
     private static final int ARGS_LENGTH = 0;
     private static final int ERROR_CODE = 1;
     private static final String PORT_FILENAME = "portUDP.ini";
     private static final String TERMINATION = "DONE";
 
+	/**
+	 * Main Method.
+	 */
     public static void main(String[] args) throws IOException {
-        System.out.println("RUNNING serverUDP");
-
-        
         // If the number of arguments do not match what is expected. Show how the 
         // program should be used and exit the program.
         if (args.length != ARGS_LENGTH)
@@ -35,7 +48,6 @@ public class serverUDP extends Thread {
         
         // Write the port to the port filename so that the client knows which port to use to
         // establish the connection.
-        System.out.println(serverSocket.getLocalPort());
         writePortNumber(serverSocket.getLocalPort());
 
         ArrayList playersInCountry = new ArrayList();
@@ -72,7 +84,6 @@ public class serverUDP extends Thread {
 
             // send number of players
             String numPlayers = Integer.toString(playersInCountry.size());
-            System.out.println("Number of players in country: " + playersInCountry.size());
             buf = numPlayers.getBytes();
             packet = new DatagramPacket(buf, buf.length, address, port);
             serverSocket.send(packet);
@@ -87,17 +98,15 @@ public class serverUDP extends Thread {
         serverSocket.close();
     }
 
-    
     /**
      * Display a usage message to inform the user how to use this program in the command line.
      * This method also exits the program as well.
      */
     private static void showUsage()
     {
-        System.err.println("USAGE: java serverUDP");
+        System.out.println("USAGE: java serverUDP");
         System.exit(ERROR_CODE);
     }
-
 
     /**
      * Write the port to the port filename so that the client knows which port to use to
@@ -114,7 +123,6 @@ public class serverUDP extends Thread {
             if(file.exists())
             {
                 file.delete();
-                //System.out.println("file deleted first");
             }
             
             FileWriter fstream = new FileWriter(PORT_FILENAME);
@@ -122,7 +130,6 @@ public class serverUDP extends Thread {
             
             toPortFile.write(String.valueOf(port));
             toPortFile.close();
-            //System.out.println("Port written to file: " + PORT_FILENAME);
         }
         catch (IOException e)
         {
