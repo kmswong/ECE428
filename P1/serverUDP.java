@@ -96,6 +96,14 @@ public class serverUDP {
             }
         }
         serverSocket.close();
+
+	// Delete the port file
+        File file = new File(PORT_FILENAME);
+        if (file.exists())
+        {
+            file.delete();
+        }
+
     }
 
     /**

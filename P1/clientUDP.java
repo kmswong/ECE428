@@ -109,12 +109,14 @@ public class clientUDP {
             int numPlayers = Integer.parseInt(received);
 
             if (numPlayers == 0) {
-                outputStream.println(this.country + " did not qualify to the world cup");
+                outputStream.print(this.country + " did not qualify to the world cup");
             }
             else {
-                for (int i = 0; i < numPlayers; i++) {
-                    String player = this.receivePacket();
-                    outputStream.println(player);
+		String player = this.receivePacket();
+		outputStream.print(player);
+                for (int i = 1; i < numPlayers; i++) {
+                    player = this.receivePacket();
+                    outputStream.print("\n" + player);
                 }
             }
 
