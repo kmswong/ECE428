@@ -82,16 +82,18 @@ public class clientTCP
 			if(numPlayers == 0)
 			{
 				String msg = fromServer.readLine();
-				toFile.write(msg + "\n");
+				toFile.write(msg);
 			}
 			// Otherwise, read each player name from the server and write it out to outTCP.dat.
 			else 
 			{
+				String player = fromServer.readLine();
+				toFile.write(player);
 				// Read the players that are returned by the server.
-				for(int i = 0; i < numPlayers; i++)
+				for(int i = 1; i < numPlayers; i++)
 				{
-					String player = fromServer.readLine();
-					toFile.write(player + "\n");
+					player = fromServer.readLine();
+					toFile.write("\n" + player);
 				}
 			}
 			
