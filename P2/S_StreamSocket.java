@@ -1,3 +1,10 @@
+/**
+* S_StreamSocket.java
+* Authors: John Huang, Kevin Lu, Ka Man Sophia Wong, Aaron Chun Win Yuen
+* Course: ECE428
+* Written in 2010
+*/
+
 import java.net.*;
 import java.util.*;
 import ece428.socket.*;
@@ -5,23 +12,24 @@ import ece428.socket.*;
 class S_StreamSocket
 {
     /* Data members */
+	private T_DatagramSocket m_socket;
 
     /* Constructor. Binds socket to addr */
-    public S_StreamSocket(InetSocketAddress addr) /* throws ... */
+    public S_StreamSocket(InetSocketAddress addr) throws SocketException
     {
-	/* Your code here */
+		m_socket = new T_DatagramSocket(addr);
     }
 
     /* Receive timeout in milliseconds */
-    public void S_setSoTimeout(int timeout) /* throws ... */
+    public void S_setSoTimeout(int timeout) throws SocketException
     {
-	/* Your code here */
+		m_socket.T_setSoTimeout(timeout);
     }
 
     /* Details of local socket (IP & port) */
     public InetSocketAddress S_getLocalSocketAddress() /* throws ... */
     {
-	/* Your code here */
+		return m_socket.T_getLocalSocketAddress();
     }
 
     /* Used by client to connect to server */
@@ -35,6 +43,7 @@ class S_StreamSocket
     public InetSocketAddress S_accept() /* throws ... */
     {
 	/* Your code here */
+		return null;
     }
 
     /* Used to send data. len can be arbitrarily large or small */
@@ -47,14 +56,14 @@ class S_StreamSocket
      * The actual number of bytes received is returned */
     public int S_receive(byte[] buf, int len) /* throws ... */
     {
-
 	/* Your code here */
+		return 0;
     }
 
     /* To close the connection */
     public void S_close() /* throws ... */
     {
-	/* Your code here */
+		m_socket.T_close();
     }
 }
 
