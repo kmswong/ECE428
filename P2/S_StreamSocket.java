@@ -84,10 +84,11 @@ class S_StreamSocket
     /* Returns the IP & port of the client */
     public InetSocketAddress S_accept() /* throws ... */
     {
-		// Receive first packet from client
-		S_receive(null, 0);
-		
-		// Get InetSocketAddress from data received
+		// Receive first packet from client and get InetSocketAddress from data received
+		byte[] buffer = new byte[1000];
+		int size = S_receive(buffer, 0);
+		InetSocketAddress addr = (InetSocketAddress) bytesToObject(buffer);
+		toAddr = addr;
 		
 		// Send acknowledgement
 		S_send(null, 0);
@@ -95,7 +96,7 @@ class S_StreamSocket
 		// Receive to establish 3-way handshake
 		S_receive(null, 0);
 		
-		return null;
+		return addr;
     }
 
     /* Used to send data. len can be arbitrarily large or small */
