@@ -7,6 +7,7 @@ CLASSPATH = ./
 
 CLASSES = \
 		ece428/socket/T_DatagramSocket.java \
+		S_StreamPacket.java \
 		S_StreamSocket.java \
 
 default: classes
