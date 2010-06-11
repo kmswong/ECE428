@@ -1,15 +1,14 @@
-import java.io.Serializable;
-
-public class S_StreamPacket implements Serializable{
-	public enum State { SYN, ACK };
+public class S_StreamPacket {
+	public final int STATE_SYN = 0;
+	public final int STATE_ACK = 1;
 	private int m_sequenceNumber;
 	private int m_acknowledgementNumber;
 	private int m_checksum;
-	private State m_currentState;
+	private int m_currentState;
 		
 	private byte[] m_data;
 	
-	public S_StreamPacket( State s, int sequenceNumber, int ackNumber, int checksum, byte[] data )
+	public S_StreamPacket( int s, int sequenceNumber, int ackNumber, int checksum, byte[] data )
 	{
 		this.m_currentState = s;
 		this.m_sequenceNumber = sequenceNumber;
@@ -18,7 +17,7 @@ public class S_StreamPacket implements Serializable{
 		this.m_data = data;
 	}
 	
-	public State getState(){
+	public int getState(){
 		return this.m_currentState;
 	}
 	
