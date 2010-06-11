@@ -5,6 +5,7 @@
 * Written in 2010
 */
 
+import java.io.*;
 import java.net.*;
 import java.util.*;
 import ece428.socket.*;
@@ -14,11 +15,13 @@ class S_StreamSocket
     /* Data members */
 	private T_DatagramSocket m_socket;
 	private final int m_packetSize = 1000; // The packet size in bytes
+	private InetSocketAddress toAddr;
 
     /* Constructor. Binds socket to addr */
     public S_StreamSocket(InetSocketAddress addr) throws SocketException
     {
 		m_socket = new T_DatagramSocket(addr);
+		toAddr = null;
     }
 
     /* Receive timeout in milliseconds */
@@ -33,11 +36,48 @@ class S_StreamSocket
 		return m_socket.T_getLocalSocketAddress();
     }
 
+	private byte[] objectToBytes(Object o) {
+		byte[] result = null;
+		try {
+			ByteArrayOutputStream bs = new ByteArrayOutputStream();
+			ObjectOutputStream os = new ObjectOutputStream(bs);
+			os.writeObject(o);
+			os.flush();
+			os.close();
+			bs.close();
+			result = bs.toByteArray();
+		} catch (Exception e) {
+		
+		}
+		return result;
+	}
+
+	private Object bytesToObject(byte[] bytes){
+		Object result = null;
+		try {
+			ByteArrayInputStream bs = new ByteArrayInputStream(bytes);
+			ObjectInputStream os = new ObjectInputStream(bs);
+			result = os.readObject();
+		} catch (Exception e) {
+		}
+
+		return result;
+	}
+
     /* Used by client to connect to server */
     public void S_connect(InetSocketAddress serverAddr) /* throws ... */
     {
-		/* Your code here */
-		
+		toAddr = serverAddr;
+		byte[] data = objectToBytes(serverAddr);
+
+		//send the sync packet
+		S_send(data, data.length);	
+
+		//receive the ack packet	
+		S_receive(null, 0);
+
+		//send the ack packet
+		S_send(null, 0);
     }
 
     /* Used by server to accept a new connection */
