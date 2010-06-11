@@ -13,7 +13,7 @@ class S_StreamSocket
 {
     /* Data members */
 	private T_DatagramSocket m_socket;
-	private final int m_packetSize = 1000; // The packet size in bytes
+	private final int PACKET_SIZE = 1000; // The packet size in bytes
 
     /* Constructor. Binds socket to addr */
     public S_StreamSocket(InetSocketAddress addr) throws SocketException
@@ -44,7 +44,16 @@ class S_StreamSocket
     /* Returns the IP & port of the client */
     public InetSocketAddress S_accept() /* throws ... */
     {
-		/* Your code here */
+		// Receive first packet from client
+		S_receive(null, 0);
+		
+		// Get InetSocketAddress from data received
+		
+		// Send acknowledgement
+		S_send(null, 0);
+		
+		// Receive to establish 3-way handshake
+		S_receive(null, 0);
 		
 		return null;
     }
