@@ -13,6 +13,7 @@ class S_StreamSocket
 {
     /* Data members */
 	private T_DatagramSocket m_socket;
+	private final int m_packetSize = 1000; // The packet size in bytes
 
     /* Constructor. Binds socket to addr */
     public S_StreamSocket(InetSocketAddress addr) throws SocketException
@@ -35,28 +36,30 @@ class S_StreamSocket
     /* Used by client to connect to server */
     public void S_connect(InetSocketAddress serverAddr) /* throws ... */
     {
-	/* Your code here */
+		/* Your code here */
+		
     }
 
     /* Used by server to accept a new connection */
     /* Returns the IP & port of the client */
     public InetSocketAddress S_accept() /* throws ... */
     {
-	/* Your code here */
+		/* Your code here */
+		
 		return null;
     }
 
     /* Used to send data. len can be arbitrarily large or small */
     public void S_send(byte[] buf, int len) /* throws ... */
     {
-	/* Your code here */
+		/* Your code here */
     }
 
     /* Used to receive data. Max chunk of data received is len. 
      * The actual number of bytes received is returned */
     public int S_receive(byte[] buf, int len) /* throws ... */
     {
-	/* Your code here */
+		/* Your code here */
 		return 0;
     }
 
@@ -66,4 +69,3 @@ class S_StreamSocket
 		m_socket.T_close();
     }
 }
-
