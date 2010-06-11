@@ -56,7 +56,10 @@ public class T_DatagramSocket
 
 	
 		boolean doEvil = !(generator.nextInt(coin1) == 1) ? true : false; // 1 in coin1 chance of doing evil
-
+		
+		// TODO: REMOVE THIS! This is set to true only for testing.
+		doEvil = true;
+	
 		if(!doEvil)
 		{
 			/* Do no evil */	
@@ -72,6 +75,9 @@ public class T_DatagramSocket
 		/* What kind of evil? */
 		boolean mangle = (generator.nextInt(coin2) == 1) ? true : false;
 
+		// TODO: REMOVE THIS! This is forced to false for now to test.
+		mangle = false;
+		
 		if(mangle)
 		{
 			/* Kind of evil: mangle */
@@ -87,7 +93,7 @@ public class T_DatagramSocket
 			{
 			    int byteToMangle = generator.nextInt(len);
 
-			   	Integer randMangle = generator.nextInt(coin3);
+			   	Integer randMangle = new Integer(generator.nextInt(coin3));
 				
 				if(DEBUG)
 				{
