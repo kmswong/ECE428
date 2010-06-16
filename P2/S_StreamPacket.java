@@ -1,6 +1,6 @@
 public class S_StreamPacket {
-	public final int STATE_SYN = 0;
-	public final int STATE_ACK = 1;
+	public static final int STATE_SYN = 0;
+	public static final int STATE_ACK = 1;
 	private int m_sequenceNumber;
 	private int m_acknowledgementNumber;
 	private int m_checksum;
