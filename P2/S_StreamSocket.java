@@ -14,14 +14,17 @@ class S_StreamSocket
 {
     /* Data members */
 	private T_DatagramSocket m_socket;
-	private final int m_packetSize = 1000; // The packet size in bytes
-	private InetSocketAddress toAddr;
+	private final int CHUNK_SIZE = 1000; // The chunk size in bytes
+	private final int RECEIVE_PACKET_SIZE = 1200;
+	private InetSocketAddress m_toAddr;
+	private final int START_SEQ_NUM = 0;
+	private final int MAX_SEND_ATTEMPTS = 10; 
 
     /* Constructor. Binds socket to addr */
     public S_StreamSocket(InetSocketAddress addr) throws SocketException
     {
 		m_socket = new T_DatagramSocket(addr);
-		toAddr = null;
+		m_toAddr = null;
     }
 
     /* Receive timeout in milliseconds */
@@ -65,9 +68,9 @@ class S_StreamSocket
 	}
 
     /* Used by client to connect to server */
-    public void S_connect(InetSocketAddress serverAddr) /* throws ... */
+    public void S_connect(InetSocketAddress serverAddr) throws IOException
     {
-		toAddr = serverAddr;
+		m_toAddr = serverAddr;
 		byte[] data = objectToBytes(serverAddr);
 
 		//send the sync packet
@@ -82,13 +85,13 @@ class S_StreamSocket
 
     /* Used by server to accept a new connection */
     /* Returns the IP & port of the client */
-    public InetSocketAddress S_accept() /* throws ... */
+    public InetSocketAddress S_accept() throws IOException
     {
 		// Receive first packet from client and get InetSocketAddress from data received
 		byte[] buffer = new byte[1000];
 		int size = S_receive(buffer, 0);
 		InetSocketAddress addr = (InetSocketAddress) bytesToObject(buffer);
-		toAddr = addr;
+		m_toAddr = addr;
 		
 		// Send acknowledgement
 		S_send(null, 0);
@@ -100,12 +103,46 @@ class S_StreamSocket
     }
 
     /* Used to send data. len can be arbitrarily large or small */
-    public void S_send(byte[] buf, int len) /* throws ... */
-    {
-		/* Your code here */
+    public void S_send(byte[] buf, int len) throws IOException
+    {	
+		// Make Header
+		int id = 0;
+		int state = S_StreamPacket.STATE_SYN;
+		int seq = 0;
+		int ack = 0;
+		int checksum = 0;
+		
+		int buff_index = 0;
+		
+		// While list != empty
+		while (true) {
+			// make a chunk
+			byte [] chunk = new byte [CHUNK_SIZE];
+			// copy data from buff to chunk
+			for (int i = 0; i < CHUNK_SIZE || buff_index < len; i++)
+			{
+				chunk[i] = buf[buff_index++];
+			}
+			
+			// make packet
+			S_StreamPacket packet = new S_StreamPacket(id, state, seq, ack, checksum, chunk, (buff_index < len - 1) );
+			
+			// for 1 .. 10
+			for (int i = 0; i < MAX_SEND_ATTEMPTS; i++)
+			{
+				// send packet using underlying UDP interface
+				byte[] packet_bytes = objectToBytes(packet); 
+				m_socket.T_sendto(packet_bytes, packet_bytes.length, m_toAddr);
+				
+				// result =s_receive()
+				byte[] result = new byte[1200];
+				
+				// TODO: REFACTOR, BIOTCH!
+				if (S_receive(result, len) == -1) break;
+			}
+		}
     }
 
-	private final int RECEIVE_PACKET_SIZE = 1200;
     /* Used to receive data. Max chunk of data received is len. 
      * The actual number of bytes received is returned */
     public int S_receive(byte[] buf, int len) /* throws ... */
@@ -134,7 +171,7 @@ class S_StreamSocket
 					}
 
 					byte[] ackPacketBytes = objectToBytes(ackPacket);
-					m_socket.T_sendto(ackPacketBytes, ackPacketBytes.length, toAddr);
+					m_socket.T_sendto(ackPacketBytes, ackPacketBytes.length, m_toAddr);
 
 					// check if there is any more data
 					if (!streamPacket.getMP()) break;
