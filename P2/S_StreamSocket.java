@@ -15,6 +15,7 @@ class S_StreamSocket
     /* Data members */
 	private T_DatagramSocket m_socket;
 	private final int CHUNK_SIZE = 1000; // The chunk size in bytes
+	private final int RECEIVE_PACKET_SIZE = 1200;
 	private InetSocketAddress m_toAddr;
 	private final int START_SEQ_NUM = 0;
 	private final int MAX_SEND_ATTEMPTS = 10; 
@@ -141,13 +142,46 @@ class S_StreamSocket
 			}
 		}
     }
-	
+
     /* Used to receive data. Max chunk of data received is len. 
      * The actual number of bytes received is returned */
     public int S_receive(byte[] buf, int len) /* throws ... */
     {
-		/* Your code here */
-		return 0;
+		int curIndex = 0;
+		while (true) {
+			try {
+					// receive packet
+					DatagramPacket packet = m_socket.T_recvfrom(RECEIVE_PACKET_SIZE);
+
+					// deserialize
+					S_StreamPacket streamPacket = (S_StreamPacket)bytesToObject(packet.getData());
+
+					// get data
+					int minLen = Math.min(len-curIndex, streamPacket.getData().length);
+					System.arraycopy(streamPacket.getData(), 0, buf, curIndex, minLen);
+					curIndex += minLen;
+
+					// send the ack packet to the sender
+					S_StreamPacket ackPacket;
+					if (curIndex < len) {
+						ackPacket = new S_StreamPacket(0, S_StreamPacket.STATE_DFT, streamPacket.getAcknowledgementNumber(), streamPacket.getSequenceNumber() + curIndex, -1, null, false); 
+					} else {
+						System.err.println("ERROR IN S_RECEIVE");	
+						ackPacket = new S_StreamPacket(0, S_StreamPacket.STATE_DFT, streamPacket.getAcknowledgementNumber(), streamPacket.getSequenceNumber() + curIndex, -1, null, false); 
+					}
+
+					byte[] ackPacketBytes = objectToBytes(ackPacket);
+					m_socket.T_sendto(ackPacketBytes, ackPacketBytes.length, m_toAddr);
+
+					// check if there is any more data
+					if (!streamPacket.getMP()) break;
+			} catch (SocketTimeoutException e) {
+				//time out
+			} catch (Exception e) {
+			}
+		}
+
+		return curIndex;
     }
 
     /* To close the connection */
