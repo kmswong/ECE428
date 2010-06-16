@@ -5,12 +5,12 @@ public class S_StreamPacket {
 	private int m_acknowledgementNumber;
 	private int m_checksum;
 	private int m_currentState;
-	private boolean m_mf;
+	private boolean m_mp;
 	private int m_id;
 		
 	private byte[] m_data;
 	
-	public S_StreamPacket( int id, int s, int sequenceNumber, int ackNumber, int checksum, byte[] data, boolean mf )
+	public S_StreamPacket( int id, int s, int sequenceNumber, int ackNumber, int checksum, byte[] data, boolean mp )
 	{
 		this.m_id = id;
 		this.m_currentState = s;
@@ -18,7 +18,7 @@ public class S_StreamPacket {
 		this.m_acknowledgementNumber = ackNumber;
 		this.m_checksum = checksum;
 		this.m_data = data;
-		this.m_mf = mf;
+		this.m_mp = mp;
 	}
 	
 	public int getId() {
@@ -49,13 +49,18 @@ public class S_StreamPacket {
 		return this.m_data;
 	}
 	
-	public boolean getMf()
+	public boolean getMP()
 	{
-		return this.m_mf;
+		return this.m_mp;
 	}
 	
 	public String toString()
 	{
-		return "";
+		return "Packet:\t" + this.getId() +
+			"\nState:\t" + this.getState() +
+			"\nSequenceNumber:\t" + this.getSequenceNumber() + 
+			"\nAcknowledgementNumber:\t" + this.getAcknowledgementNumber() + 
+			"\nChecksum:\t" + this.getChecksum() +
+			"\nMF:\t" + this.getMP() ;
 	}
 }
