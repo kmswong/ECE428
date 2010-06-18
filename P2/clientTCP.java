@@ -46,6 +46,7 @@ public class clientTCP
 		
 		// Busy loop to wait for the port filename to exist. If it does, retrieve the port number.
 		int port = getPortNumber();
+		System.out.println("port: " + port);
 		
 		// Get list of players and establish connection.
 		try

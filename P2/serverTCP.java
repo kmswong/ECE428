@@ -45,6 +45,7 @@ public class serverTCP
 		// Write the port to the port filename so that the client knows which port to use to
 		// establish the connection.
         InetSocketAddress localAddress = socket.S_getLocalSocketAddress();
+		System.out.println("local address: " + localAddress);
 		writePortNumber(localAddress.getPort());
 
         InetSocketAddress clientSocket = null;
