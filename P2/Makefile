@@ -9,6 +9,8 @@ CLASSES = \
 		ece428/socket/T_DatagramSocket.java \
 		S_StreamPacket.java \
 		S_StreamSocket.java \
+		clientTCP.java \
+		serverTCP.java
 
 default: classes
 

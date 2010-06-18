@@ -72,7 +72,7 @@ public class clientTCP
 			BufferedWriter toFile = new BufferedWriter(fstream);
 			
 			// Reading the number of players to receive from server.
-            int numPlayers = Integer.parseInt(receiveString(socket));
+            numPlayers = Integer.parseInt(receiveString(socket));
 
 			// If there are no players returned for the country. Client expects
 			// a message from the server (one line only).
@@ -95,7 +95,7 @@ public class clientTCP
 			}
 			
 			// Close everything before program ends.
-			socket.close();
+			socket.S_close();
 			toFile.close();
 		}
 		catch (UnknownHostException e)
@@ -122,13 +122,17 @@ public class clientTCP
 
     private static void sendData(S_StreamSocket socket, int data)
     {
-        sendString(Integer.toString(data));
+        sendString(socket, Integer.toString(data));
     }
 
     private static void sendString(S_StreamSocket socket, String data)
     {
-        byte[] buf = socket.getBytes();
+        byte[] buf = data.getBytes();
+		try {
         socket.S_send(buf, buf.length);
+		} catch(Exception e) {
+			System.err.println(e.getMessage());
+		}
     }
 
 	/**

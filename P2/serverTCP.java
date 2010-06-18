@@ -33,7 +33,7 @@ public class serverTCP
 		S_StreamSocket socket = null;
 		try 
 		{
-            socket = new S_StreamSocket();
+            socket = new S_StreamSocket(null);
 			//socket.bind(null);
         }
 		catch (IOException e)
@@ -67,7 +67,7 @@ public class serverTCP
 			// Check if country is found by checking if there are number of plaeyrs.
 			ArrayList listOfPlayers = new ArrayList();
 			
-			for( int x = 0; x < numOfLines; x++ )
+			for( int x = 0; x < numLines; x++ )
 			{
 				listOfPlayers.add(receiveString(socket));
 			}
@@ -97,7 +97,7 @@ public class serverTCP
 		
 		// Close everything before program ends.
         socket.S_close();
-        clientSocket.close();
+        //clientSocket.close();
 		
 		// Delete the port file
 		File file = new File(PORT_FILENAME);
@@ -119,13 +119,17 @@ public class serverTCP
 
     private static void sendData(S_StreamSocket socket, int data)
     {
-        sendString(Integer.toString(data));
+        sendString(socket, Integer.toString(data));
     }
 
     private static void sendString(S_StreamSocket socket, String data)
     {
-        byte[] buf = socket.getBytes();
+        byte[] buf = data.getBytes();
+		try {
         socket.S_send(buf, buf.length);
+		}catch(Exception e) {
+			System.err.println(e.getMessage());
+		}
     }
 	
 	/**
