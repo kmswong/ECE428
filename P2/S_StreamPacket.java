@@ -1,7 +1,7 @@
-public class S_StreamPacket {
-	public static final int STATE_DFT = -1;
-	public static final int STATE_SYN = 0;
-	public static final int STATE_ACK = 1;
+import java.io.*;
+
+public class S_StreamPacket implements Serializable
+{
 	private int m_sequenceNumber;
 	private int m_acknowledgementNumber;
 	private int m_checksum;

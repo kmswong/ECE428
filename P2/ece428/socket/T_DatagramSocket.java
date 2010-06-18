@@ -26,7 +26,12 @@ public class T_DatagramSocket
 	/* Binds the socket to addr */
 	public T_DatagramSocket(InetSocketAddress addr) throws SocketException
 	{
-		d_socket = new DatagramSocket(addr);	
+		// TODO: REMOVE THIS!
+		if (addr == null) {
+			d_socket = new DatagramSocket();
+		} else {
+			d_socket = new DatagramSocket(addr);	
+		} 
 		
 		generator = new Random();		
 	}
@@ -58,7 +63,7 @@ public class T_DatagramSocket
 		boolean doEvil = !(generator.nextInt(coin1) == 1) ? true : false; // 1 in coin1 chance of doing evil
 		
 		// TODO: REMOVE THIS! This is set to true only for testing.
-		doEvil = true;
+		doEvil = false;
 	
 		if(!doEvil)
 		{
@@ -142,7 +147,7 @@ public class T_DatagramSocket
 	public DatagramPacket T_recvfrom(int len) throws IOException
 	{
 		DatagramPacket p = new DatagramPacket(new byte[len], len);
-
+		
 		d_socket.receive(p);
 
 		return(p);

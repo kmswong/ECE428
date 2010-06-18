@@ -54,8 +54,12 @@ public class clientTCP
 			players = getPlayers(filename);
 			
             InetSocketAddress socketAddress = new InetSocketAddress(IP, port);
-			socket = new S_StreamSocket(socketAddress);
-		
+			
+			socket = new S_StreamSocket(null);
+			
+			System.out.println("CONNECT TO SERVER");
+			socket.S_connect(socketAddress);
+			
 			// Send country to server.
             sendString(socket, country);
 			
