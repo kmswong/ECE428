@@ -63,6 +63,7 @@ public class serverTCP
 		{  
             // get country
             String country = receiveString(socket);
+System.out.println("---------received country is " + country);
             int numLines = Integer.parseInt(receiveString(socket));
 
 			// Check if country is found by checking if there are number of plaeyrs.
@@ -71,6 +72,7 @@ public class serverTCP
 			for( int x = 0; x < numLines; x++ )
 			{
 				listOfPlayers.add(receiveString(socket));
+				System.out.println("----------received player: " + listOfPlayers.get(x));
 			}
 
 			// Process the players.
@@ -87,7 +89,7 @@ public class serverTCP
 			} 
 			else
 			{ 
-                sendString(socket, country + " did not qualify for the world cup");
+                sendString(socket, country + " did not qualify to the world cup");
 			}
 
         }

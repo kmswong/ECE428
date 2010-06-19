@@ -104,7 +104,7 @@ class S_StreamSocket
 		S_send(null, 0);
 		
 		m_state = S_StreamSocket.STATE_CON;
-		throw new IOException();
+		System.out.println("done connect");
     }
 
     /* Used by server to accept a new connection */
@@ -123,8 +123,9 @@ class S_StreamSocket
 		S_receive(null, 0);
 		
 		m_state = S_StreamSocket.STATE_CON;
-		throw new IOException();
-		//return addr;
+
+		System.out.println("done accept");
+		return m_toAddr;
     }
 
     /* Used to send data. len can be arbitrarily large or small */
@@ -138,6 +139,14 @@ class S_StreamSocket
 		
 		int buff_index = 0;
 		int chunkSize = Math.min(CHUNK_SIZE, len);
+
+		/*
+		System.out.println("send len: " + len);
+		for (int i = 0; i < len; i++) {
+			System.out.print(buf[i] + " ");
+		}
+		System.out.println();
+		*/
 		
 		// While list != empty
 		while (true) {
@@ -148,7 +157,7 @@ class S_StreamSocket
 			{
 				chunk[i] = buf[buff_index++];
 			}
-			
+
 			// make packet
 			S_StreamPacket packet = new S_StreamPacket(id, m_state, seq, ack, checksum, chunk, (buff_index < len - 1) );
 			
@@ -160,7 +169,7 @@ class S_StreamSocket
 				// send packet using underlying UDP interface
 				byte[] packet_bytes = objectToBytes(packet); 
 				
-				System.out.println("sending to " + m_toAddr + " from " + m_socket.T_getLocalSocketAddress());
+				//System.out.println("sending to " + m_toAddr + " from " + m_socket.T_getLocalSocketAddress());
 				m_socket.T_sendto(packet_bytes, packet_bytes.length, m_toAddr);
 				
 				// result =s_receive()
@@ -171,13 +180,14 @@ class S_StreamSocket
 
 				// deserialize
 				S_StreamPacket streamPacket = (S_StreamPacket)bytesToObject(ackPacket.getData());
-				System.out.println("ID of the ack packet: " + streamPacket.getId());
+				//System.out.println("ID of the ack packet: " + streamPacket.getId());
 				
 				// if the correct ack number is receive then this chunk is correctly received
+				System.out.println("ack num is " + streamPacket.getAcknowledgementNumber() + ", buff index is " + buff_index );
 				if (streamPacket.getAcknowledgementNumber() == buff_index || streamPacket.getState() == S_StreamSocket.STATE_ACK) break;
 			}
 			
-			System.out.println("done sending one chunk");
+			System.out.println("buff index: " + buff_index + ", len: " + len);
 			if (buff_index == len) break;
 		}
 		System.out.println("done sent");
@@ -195,22 +205,23 @@ class S_StreamSocket
 
 					// deserialize
 					S_StreamPacket streamPacket = (S_StreamPacket)bytesToObject(packet.getData());
-					System.out.println("ID of the received packet: " + streamPacket.getId());
-				
 					
 					// get data
-					int minLen = Math.min(len-curIndex, streamPacket.getData().length);
-					System.arraycopy(streamPacket.getData(), 0, buf, curIndex, minLen);
-					curIndex += minLen;
+					byte[] data = streamPacket.getData();
+					if (data != null) {
+							int minLen = Math.min(len-curIndex, data.length);
+							if (minLen > 0) {
+								System.arraycopy(data, 0, buf, curIndex, minLen);
+								curIndex += minLen;
+							}
+					}
 
-					System.out.println("A");
 					if (streamPacket.getState() == S_StreamSocket.STATE_SYN && m_toAddr == null && !streamPacket.getMP()) {
 						InetSocketAddress addr = (InetSocketAddress) bytesToObject(buf);
 						System.out.println("accepted addr: " + addr);
 						m_toAddr = addr;
 					}
 					
-					System.out.println("B");
 					if (m_toAddr != null) {
 						System.out.println("curIndex: " + curIndex + ", len " + len);
 						// send the ack packet to the sender
@@ -224,10 +235,8 @@ class S_StreamSocket
 
 						byte[] ackPacketBytes = objectToBytes(ackPacket);
 						m_socket.T_sendto(ackPacketBytes, ackPacketBytes.length, m_toAddr);
-						System.out.println("done sending back ack");
 					}
 
-					System.out.println("C");
 					// check if there is any more data
 					if (!streamPacket.getMP()) break;
 			} catch (SocketTimeoutException e) {
@@ -237,6 +246,14 @@ class S_StreamSocket
 				System.err.println("RECEIVE ERROR: " + e.getMessage());
 			}
 		}
+
+		/*
+		for (int i = 0; i < curIndex; i++) {
+			System.out.print(buf[i] + " ");
+		}
+		System.out.println();
+		*/
+
 		System.out.println("done receive");
 		return curIndex;
     }
