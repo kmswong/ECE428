@@ -184,8 +184,14 @@ class S_StreamSocket
 			S_StreamPacket packet = new S_StreamPacket(id, m_state, m_seq, m_ack, null, chunk, (buff_index < len - 1) );
 			checksum = calculateChecksum(packet.getData());	
 			packet.setChecksum(checksum);
+			System.out.print("Send checksum is " );
+			for(int a = 0; a < checksum.length; a++) {
+				System.out.print(checksum[a]);
+			}
+			System.out.println();
 			
 			byte[] packet_bytes = objectToBytes(packet); 
+System.out.println("number of packet bytes is " + packet_bytes.length);
 			byte[] result = new byte[1200];
 				
 			int i;
@@ -271,13 +277,21 @@ class S_StreamSocket
 					
 				// deserialize
 				S_StreamPacket streamPacket = (S_StreamPacket)bytesToObject(packet.getData());
+				// if deserialize failed, start again
+				if (streamPacket == null) continue;
 				
 				// get data
 				byte[] data = streamPacket.getData();
 				
 				// verify checksum
 				packetChecksum = streamPacket.getChecksum();
+				streamPacket.setChecksum(null);
 				dataChecksum = calculateChecksum(data);
+			System.out.print("Receive checksum is " );
+			for(int a = 0; a < dataChecksum.length; a++) {
+				System.out.print(packetChecksum[a]);
+			}
+			System.out.println();
 		
 				System.out.println("packetChecksum: " + packetChecksum.length);
 				System.out.println("dataChecksum: " + dataChecksum.length);

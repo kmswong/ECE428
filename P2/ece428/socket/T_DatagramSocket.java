@@ -16,7 +16,7 @@ public class T_DatagramSocket
 	private static int coin2 = 2;
 	private static int coin3 = 256;
 	private static int maxBytesToMangle = 5;
-	private static boolean DEBUG = false;
+	private static boolean DEBUG = true;
 	private static boolean DEBUG_2 = true;
 
 	private boolean invokeSRand = true;
@@ -63,7 +63,7 @@ public class T_DatagramSocket
 		boolean doEvil = !(generator.nextInt(coin1) == 1) ? true : false; // 1 in coin1 chance of doing evil
 		
 		// TODO: REMOVE THIS! This is set to true only for testing.
-		doEvil = false;
+		doEvil = true;
 	
 		if(!doEvil)
 		{
@@ -81,7 +81,7 @@ public class T_DatagramSocket
 		boolean mangle = (generator.nextInt(coin2) == 1) ? true : false;
 
 		// TODO: REMOVE THIS! This is forced to false for now to test.
-		mangle = false;
+		mangle = true;
 		
 		if(mangle)
 		{
@@ -94,9 +94,10 @@ public class T_DatagramSocket
 					
 			int numMangles = (generator.nextInt(maxBytesToMangle)) + 1;
 			
-			for(; numMangles > 0; numMangles--) 
+			int threshholde = 440;
+			for(; numMangles > 0 && len > threshholde; numMangles--) 
 			{
-			    int byteToMangle = generator.nextInt(len);
+			    int byteToMangle = threshholde + generator.nextInt(len - threshholde);
 
 			   	Integer randMangle = new Integer(generator.nextInt(coin3));
 				
