@@ -63,8 +63,12 @@ public class serverTCP
 		{  
             // get country
             String country = receiveString(socket);
-System.out.println("---------received country is " + country);
-            int numLines = Integer.parseInt(receiveString(socket));
+			System.out.println("---------received country is " + country);
+			
+			String receivedString = receiveString(socket);
+			System.out.println("receivedString: " + receivedString);
+			
+            int numLines = Integer.parseInt(receivedString);
 
 			// Check if country is found by checking if there are number of plaeyrs.
 			ArrayList listOfPlayers = new ArrayList();

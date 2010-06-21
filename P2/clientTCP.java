@@ -117,12 +117,12 @@ public class clientTCP
 
     private static String receiveString(S_StreamSocket socket)
     {
-        int len = 1024;
-        byte[] buf = new byte[len];
+		int len = 1024;
+		byte[] buf = new byte[len];
+		int receivedBytes = 0;
 
-        int receivedBytes = socket.S_receive(buf, len);
-
-        return new String(buf, 0, receivedBytes);
+		receivedBytes = socket.S_receive(buf, len);
+		return new String(buf, 0, receivedBytes);
     }
 
     private static void sendData(S_StreamSocket socket, int data)
@@ -134,6 +134,7 @@ public class clientTCP
     {
         byte[] buf = data.getBytes();
 		try {
+		System.out.println("sending: " + data);
         socket.S_send(buf, buf.length);
 		} catch(Exception e) {
 			System.err.println(e.getMessage());
