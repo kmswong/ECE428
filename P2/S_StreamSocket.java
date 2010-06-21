@@ -191,7 +191,7 @@ class S_StreamSocket
 			System.out.println();
 			
 			byte[] packet_bytes = objectToBytes(packet); 
-System.out.println("number of packet bytes is " + packet_bytes.length);
+            System.out.println("number of packet bytes is " + packet_bytes.length);
 			byte[] result = new byte[1200];
 				
 			int i;
@@ -307,6 +307,12 @@ System.out.println("number of packet bytes is " + packet_bytes.length);
 							curIndex += minLen;
 						}
 					}
+
+                    // handle close request
+                    if (streamPacket.getState() == S_StreamSocket.STATE_CLD) {
+                        this.S_close();
+                        return 0;
+                    }
 				}
 				
 				if (streamPacket.getState() == S_StreamSocket.STATE_SYN && m_toAddr == null && !streamPacket.getMP()) {
@@ -371,7 +377,18 @@ System.out.println("number of packet bytes is " + packet_bytes.length);
 	 */
     public void S_close() /* throws ... */
     {
+        // reset variables (similar to constructor)
+		m_state = S_StreamSocket.STATE_CLD;
+		m_seq = 0;
+		m_ack = 0;
+
+        S_StreamPacket packet = new S_StreamPacket(0, m_state, m_seq, m_ack, null, null, 0);
+        byte[] packet_bytes = objectToBytes(packet); 
+        m_socket.T_sendto(packet_bytes, packet_bytes.length, m_toAddr);
 		m_socket.T_close();
+
+        // don't want to store the other address anymore
+        m_toAddr = null;
     }
 	
 	/**

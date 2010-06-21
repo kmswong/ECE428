@@ -31,10 +31,10 @@ public class serverTCP
         }
 		
 		S_StreamSocket socket = null;
+        InetSocketAddress loopback = new InetSocketAddress("127.0.0.1", 0);
 		try 
 		{
-            socket = new S_StreamSocket(null);
-			//socket.bind(null);
+            socket = new S_StreamSocket(loopback);
         }
 		catch (IOException e)
 		{
