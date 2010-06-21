@@ -26,12 +26,7 @@ public class T_DatagramSocket
 	/* Binds the socket to addr */
 	public T_DatagramSocket(InetSocketAddress addr) throws SocketException
 	{
-		// TODO: REMOVE THIS!
-		if (addr == null) {
-			d_socket = new DatagramSocket();
-		} else {
-			d_socket = new DatagramSocket(addr);	
-		} 
+        d_socket = new DatagramSocket(addr);	
 		
 		generator = new Random();		
 	}
@@ -62,7 +57,6 @@ public class T_DatagramSocket
 	
 		boolean doEvil = !(generator.nextInt(coin1) == 1) ? true : false; // 1 in coin1 chance of doing evil
 		
-		// TODO: REMOVE THIS! This is set to true only for testing.
 		doEvil = true;
 	
 		if(!doEvil)
@@ -80,7 +74,6 @@ public class T_DatagramSocket
 		/* What kind of evil? */
 		boolean mangle = (generator.nextInt(coin2) == 1) ? true : false;
 
-		// TODO: REMOVE THIS! This is forced to false for now to test.
 		mangle = true;
 		
 		if(mangle)

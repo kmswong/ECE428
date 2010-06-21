@@ -41,6 +41,7 @@ public class clientTCP
 		
 		// Variables used for TCP connection.
 		S_StreamSocket socket = null;
+        InetSocketAddress loopback = new InetSocketAddress("127.0.0.1", 0);
 		
 		ArrayList players = null;
 		
@@ -53,12 +54,12 @@ public class clientTCP
 		{
 			players = getPlayers(filename);
 			
-            InetSocketAddress socketAddress = new InetSocketAddress(IP, port);
+            InetSocketAddress serverSocketAddress = new InetSocketAddress(IP, port);
 			
-			socket = new S_StreamSocket(null);
+			socket = new S_StreamSocket(loopback);
 			
 			System.out.println("CONNECT TO SERVER");
-			socket.S_connect(socketAddress);
+			socket.S_connect(serverSocketAddress);
 			
 			// Send country to server.
             sendString(socket, country);

@@ -194,6 +194,19 @@ class S_StreamSocket
 				chunk[i] = buf[buff_index++];
 			}
 			System.out.println(" WWEEEEEEEEEEE SENDING WITH SEQ: " + m_seq + " ACK: " + m_ack + "\n" );
+			S_StreamPacket packet = new S_StreamPacket(id, m_state, m_seq, m_ack, null, chunk, (buff_index < len - 1) );
+			checksum = calculateChecksum(packet.getData());	
+			packet.setChecksum(checksum);
+			System.out.print("Send checksum is " );
+			for(int a = 0; a < checksum.length; a++) {
+				System.out.print(checksum[a]);
+			}
+			System.out.println();
+			
+			byte[] packet_bytes = objectToBytes(packet); 
+            System.out.println("number of packet bytes is " + packet_bytes.length);
+			byte[] result = new byte[1200];
+				
 
 			int i;
 			// for 1 .. 10
@@ -343,6 +356,12 @@ class S_StreamSocket
 							curIndex += minLen;
 						}
 					}
+
+                    // handle close request
+                    if (streamPacket.getState() == S_StreamSocket.STATE_CLD) {
+                        this.S_close();
+                        return 0;
+                    }
 				}
 				
 				if (streamPacket.getState() == S_StreamSocket.STATE_SYN && m_toAddr == null && !streamPacket.getMP()) {
@@ -413,7 +432,18 @@ class S_StreamSocket
 	 */
     public void S_close() /* throws ... */
     {
+        // reset variables (similar to constructor)
+		m_state = S_StreamSocket.STATE_CLD;
+		m_seq = 0;
+		m_ack = 0;
+
+        S_StreamPacket packet = new S_StreamPacket(0, m_state, m_seq, m_ack, null, null, 0);
+        byte[] packet_bytes = objectToBytes(packet); 
+        m_socket.T_sendto(packet_bytes, packet_bytes.length, m_toAddr);
 		m_socket.T_close();
+
+        // don't want to store the other address anymore
+        m_toAddr = null;
     }
 	
 	/**
