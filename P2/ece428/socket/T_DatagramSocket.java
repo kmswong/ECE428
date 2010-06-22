@@ -17,7 +17,7 @@ public class T_DatagramSocket
 	private static int coin3 = 256;
 	private static int maxBytesToMangle = 5;
 	private static boolean DEBUG = false;
-	private static boolean DEBUG_2 = true;
+	private static boolean DEBUG_2 = false;
 
 	private boolean invokeSRand = true;
 	private Random generator;
