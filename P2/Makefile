@@ -10,7 +10,7 @@ CLASSES = \
 		S_StreamPacket.java \
 		S_StreamSocket.java \
 		clientTCP.java \
-		serverTCP.java
+		serverTCP.java 
 
 default: classes
 

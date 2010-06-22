@@ -57,7 +57,7 @@ public class T_DatagramSocket
 	
 		boolean doEvil = !(generator.nextInt(coin1) == 1) ? true : false; // 1 in coin1 chance of doing evil
 		
-		doEvil = true;
+		//doEvil = true;
 	
 		if(!doEvil)
 		{
@@ -74,7 +74,7 @@ public class T_DatagramSocket
 		/* What kind of evil? */
 		boolean mangle = (generator.nextInt(coin2) == 1) ? true : false;
 
-		mangle = true;
+		//mangle = false;
 		
 		if(mangle)
 		{
