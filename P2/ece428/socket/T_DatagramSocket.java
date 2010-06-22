@@ -16,8 +16,8 @@ public class T_DatagramSocket
 	private static int coin2 = 2;
 	private static int coin3 = 256;
 	private static int maxBytesToMangle = 5;
-	private static boolean DEBUG = true;
-	private static boolean DEBUG_2 = true;
+	private static boolean DEBUG = false;
+	private static boolean DEBUG_2 = false;
 
 	private boolean invokeSRand = true;
 	private Random generator;
@@ -26,7 +26,7 @@ public class T_DatagramSocket
 	/* Binds the socket to addr */
 	public T_DatagramSocket(InetSocketAddress addr) throws SocketException
 	{
-        d_socket = new DatagramSocket(addr);	
+		d_socket = new DatagramSocket(addr);	
 		
 		generator = new Random();		
 	}
@@ -56,9 +56,7 @@ public class T_DatagramSocket
 
 	
 		boolean doEvil = !(generator.nextInt(coin1) == 1) ? true : false; // 1 in coin1 chance of doing evil
-		
-		//doEvil = true;
-	
+
 		if(!doEvil)
 		{
 			/* Do no evil */	
@@ -74,8 +72,6 @@ public class T_DatagramSocket
 		/* What kind of evil? */
 		boolean mangle = (generator.nextInt(coin2) == 1) ? true : false;
 
-		//mangle = false;
-		
 		if(mangle)
 		{
 			/* Kind of evil: mangle */
@@ -87,10 +83,9 @@ public class T_DatagramSocket
 					
 			int numMangles = (generator.nextInt(maxBytesToMangle)) + 1;
 			
-			int threshholde = 440;
-			for(; numMangles > 0 && len > threshholde; numMangles--) 
+			for(; numMangles > 0; numMangles--) 
 			{
-			    int byteToMangle = threshholde + generator.nextInt(len - threshholde);
+			    int byteToMangle = generator.nextInt(len);
 
 			   	Integer randMangle = new Integer(generator.nextInt(coin3));
 				
@@ -141,7 +136,7 @@ public class T_DatagramSocket
 	public DatagramPacket T_recvfrom(int len) throws IOException
 	{
 		DatagramPacket p = new DatagramPacket(new byte[len], len);
-		
+
 		d_socket.receive(p);
 
 		return(p);

@@ -22,11 +22,12 @@ class S_StreamSocket
 	private T_DatagramSocket m_socket;
 	private InetSocketAddress m_toAddr;
 	private int m_state;
-	private int m_send_seq;
-	private int m_send_ack;
-	private int m_receive_seq;
-	private int m_receive_ack;
+	private int m_sendSeq;
+	private int m_sendAck;
+	private int m_receiveSeq;
+	private int m_receiveAck;
 	private S_StreamPacket m_ackPacket;
+	
 	private final int CHUNK_SIZE = 1000; // The chunk size in bytes
 	private final int RECEIVE_PACKET_SIZE = 1200;
 	private final int START_SEQ_NUM = 0;
@@ -39,9 +40,11 @@ class S_StreamSocket
 	public static final int STATE_CLD = 3; // Close
 	public static final int STATE_ERR = 4; // Error (Checksum)
 	
+	private int m_id;
+	
 	private static final String DIGEST_ALGORITHM_NAME = "MD5";
 	
-	private final int TIMEOUT = 250;
+	private final int TIMEOUT = 500;
 
     /** 
 	 * Constructor. 
@@ -57,12 +60,13 @@ class S_StreamSocket
 		m_socket = new T_DatagramSocket(addr);
 		m_toAddr = null;
 		m_state = S_StreamSocket.STATE_CLD;
-		m_send_ack = 0;
-		m_send_seq = 0;
-		m_receive_ack = 0;
-		m_receive_seq = 0;
-		m_ackPacket = new S_StreamPacket(0, STATE_ERR, m_send_seq, m_send_ack, null, null, false);
-    }
+		m_sendAck = 0;
+		m_sendSeq = 0;
+		m_receiveAck = 0;
+		m_receiveSeq = 0;
+		m_id = 1;
+		m_ackPacket = new S_StreamPacket(0, STATE_ERR, m_sendSeq, m_sendAck, null, null, false);
+	}
 
 	/**
 	 * Sets the socket timeout in milliseconds.
@@ -172,7 +176,9 @@ class S_StreamSocket
     public void S_send(byte[] buf, int len) throws IOException
     {
 		byte[] ackPacketData = null;
-		byte[] packetChecksum = null;				
+		byte[] packetChecksum = null;	
+		byte[] dataChecksum = null;
+		byte[] tempPacketChecksum = null;
 		
 		int buff_index = 0;
 		int chunkSize = Math.min(CHUNK_SIZE, len);
@@ -180,42 +186,28 @@ class S_StreamSocket
 		
 		// Stream Packet Info
 		S_StreamPacket packet;
-		int id = 10;
 		byte[] checksum;
 		byte[] packet_bytes;			// serialized version of packet
+		m_id++;							// Increase the ID of the packet being sent
 		
-		// While list != empty
 		while (true) {
+
+			// Increase the Acknowledgement number
+			m_sendAck += 1;
+			
 			// make a chunk
 			chunk = new byte [chunkSize];
-			
-			// Increase the Acknowledgement number
-			m_send_ack += 1;
-			
 			// copy data from buff to chunk
 			for (int i = 0; i < chunkSize && buff_index < len; i++)
 			{
 				chunk[i] = buf[buff_index++];
 			}
-			System.out.println(" WWEEEEEEEEEEE SENDING WITH SEQ: " + m_send_seq + " ACK: " + m_send_ack + "\n" );
-			packet = new S_StreamPacket(id, m_state, m_send_seq, m_send_ack, null, chunk, (buff_index < len - 1) );
-			checksum = calculateChecksum(packet.getData());	
-			packet.setChecksum(checksum);
-			System.out.print("Send checksum is " );
-			for(int a = 0; a < checksum.length; a++) {
-				System.out.print(checksum[a]);
-			}
-			System.out.println();
-			
-			packet_bytes = objectToBytes(packet); 
-            System.out.println("number of packet bytes is " + packet_bytes.length);				
 
-			int i;
-			// for 1 .. 10
-			for ( i = 0; i < MAX_SEND_ATTEMPTS; i++)
+			// Try to send the packet
+			for (int i = 0; i < MAX_SEND_ATTEMPTS; i++)
 			{
 				// send packet using underlying UDP interface			
-				packet = new S_StreamPacket(id, m_state, m_send_seq, m_send_ack, null, chunk, (buff_index < len - 1) );		
+				packet = new S_StreamPacket(m_id, m_state, m_sendSeq, m_sendAck, null, chunk, (buff_index < len - 1) );		
 				packet.setChecksum( calculatePacketChecksum( packet ) );
 				packet_bytes = objectToBytes(packet); 
 				m_socket.T_sendto(packet_bytes, packet_bytes.length, m_toAddr);
@@ -224,57 +216,32 @@ class S_StreamSocket
 				S_setSoTimeout(TIMEOUT);
 				try {
 					DatagramPacket ackPacket = m_socket.T_recvfrom(RECEIVE_PACKET_SIZE);
-					System.out.println("CLIENT RECEIVED SOMETHING!");
 				
-					// deserialize
+					// Deserialize the packet
 					ackPacketData = ackPacket.getData();
 					S_StreamPacket streamPacket = (S_StreamPacket)bytesToObject(ackPacketData);
 					if (streamPacket == null) continue;
 					
-					byte[] tempPacketChecksum = streamPacket.getChecksum();
+					// Calculate Checksum
+					tempPacketChecksum = streamPacket.getChecksum();
 					packetChecksum = new byte[tempPacketChecksum.length];
 					for( int a = 0; a < tempPacketChecksum.length; a++ ) {
 						packetChecksum[a] = tempPacketChecksum[a];
 					}
-
 					streamPacket.setChecksum(null);
-					byte[] dataChecksum = calculatePacketChecksum(streamPacket);
-					
-					System.out.println("+++++++++++++++ Seq: " + m_send_seq + " NEW SEQ: " + streamPacket.getSequenceNumber() );
-					System.out.println("+++++++++++++++ Ack: " + m_send_ack + " NEW ACK: " + streamPacket.getAcknowledgementNumber() );
+					dataChecksum = calculatePacketChecksum(streamPacket);
 				
-					if (dataChecksum!= null) {
-						System.out.print("dataChecksum is " );
-						for(int a = 0; a < dataChecksum.length; a++) {
-							System.out.print(dataChecksum[a]);
-						}
-						System.out.println();
-					}
-					
-					if (packetChecksum!= null) {
-						System.out.print("packetChecksum is " );
-						for(int a = 0; a < packetChecksum.length; a++) {
-							System.out.print(packetChecksum[a]);
-						}
-						System.out.println();
-					}
-				
-					if ( MessageDigest.isEqual(dataChecksum, packetChecksum) && streamPacket.getSequenceNumber() == m_send_ack && streamPacket.getAcknowledgementNumber() != m_send_seq) {
-						m_send_seq = streamPacket.getAcknowledgementNumber();
-						m_send_ack = streamPacket.getSequenceNumber();
+					// Only stop sending the packet if the checksum of the ACK package matches
+					if ( MessageDigest.isEqual(dataChecksum, packetChecksum) && streamPacket.getSequenceNumber() == m_sendAck && streamPacket.getAcknowledgementNumber() != m_sendSeq && streamPacket.getId() == m_id) {
+						m_sendSeq = streamPacket.getAcknowledgementNumber();
+						m_sendAck = streamPacket.getSequenceNumber();
 						break;
 					}
 				}
 				catch (SocketTimeoutException e) {
-					System.out.println("RECEIVING BACK ACK TIMEOUT");
 					continue;
 				}
 			}
-			
-			if( i == MAX_SEND_ATTEMPTS ) { System.out.println("HAHAH EVEN PROGRAM GIVES UP"); }
-			
-			System.out.println("buff index: " + buff_index + ", len: " + len);
-
 			if (buff_index == len) break;
 		}
 		System.out.println("done sent");
@@ -294,22 +261,22 @@ class S_StreamSocket
     {
 		byte[] dataChecksum;
 		byte[] packetChecksum;
+
 		byte[] data = null;
 		byte[] ackPacketBytes = null;
-		int curIndex = 0;
-		DatagramPacket packet;
-		int prev_ack = 0;
-		
-		try {
-			while (true) {	
-				S_setSoTimeout(TIMEOUT);
 				
+		int curIndex = 0;
+		int prevAck = 0;
+		DatagramPacket packet;
+
+		while (true) {	
+			try {
+				S_setSoTimeout(TIMEOUT);
+		
+				// Try to receive a packet, if it times out, resend the previous ACK packet
 				try {
-					// receive packet
 					packet = m_socket.T_recvfrom(RECEIVE_PACKET_SIZE);
 				} catch (SocketTimeoutException e) {
-					System.out.println("RECEIVING FROM SEND IS TIMING OUT");
-					
 					ackPacketBytes = objectToBytes(m_ackPacket);
 					if (m_toAddr != null) {
 						m_socket.T_sendto(ackPacketBytes, ackPacketBytes.length, m_toAddr);
@@ -317,41 +284,22 @@ class S_StreamSocket
 					continue;
 				}
 					
-				// deserialize
+				// Deserialize the packet received
 				S_StreamPacket streamPacket = (S_StreamPacket)bytesToObject(packet.getData());
+				
 				// if deserialize failed, start again
 				if (streamPacket == null) continue;
-				
-				// get data
-				data = streamPacket.getData();
-				
-				// verify checksum
+
+				// Verify checksum
+				data = streamPacket.getData();				
 				packetChecksum = streamPacket.getChecksum();
 				streamPacket.setChecksum(null);
 				dataChecksum = calculatePacketChecksum(streamPacket);
-				
-					
-				System.out.print("packetChecksum is " );
-				for(int a = 0; a < packetChecksum.length; a++) {
-					System.out.print(packetChecksum[a]);
-				}
-				System.out.println();
-				
-									
-				System.out.print("dataChecksum is " );
-				for(int a = 0; a < dataChecksum.length; a++) {
-					System.out.print(dataChecksum[a]);
-				}
-				System.out.println();
-		
-				System.out.println("packetChecksum: " + packetChecksum.length);
-				System.out.println("dataChecksum: " + dataChecksum.length);
-				System.out.println("same: " +  MessageDigest.isEqual(packetChecksum, dataChecksum));
-				System.out.println();
 
+				// Put the data into the buffer if the checksum is the same
 				if (MessageDigest.isEqual(packetChecksum, dataChecksum)) {
 					if (data != null) {
-						if (streamPacket.getState() == S_StreamSocket.STATE_SYN || (streamPacket.getAcknowledgementNumber() != m_receive_ack)) {
+						if (streamPacket.getState() == S_StreamSocket.STATE_SYN || (streamPacket.getAcknowledgementNumber() != m_receiveAck)) {
 							int minLen = Math.min(len-curIndex, data.length);
 							if (minLen > 0) {
 								System.arraycopy(data, 0, buf, curIndex, minLen);
@@ -365,73 +313,45 @@ class S_StreamSocket
 							return 0;
 						}
 					}
-					
 
+					// If it is a SYN request, retrieve the to address
 					if(streamPacket.getState() == S_StreamSocket.STATE_SYN && m_toAddr == null && !streamPacket.getMP()) {
 						InetSocketAddress addr = (InetSocketAddress) bytesToObject(buf);
-						System.out.println("accepted addr: " + addr);
 						m_toAddr = addr;
 					}
 				} else {
 					curIndex = 0;
 				}
 				
-				System.out.println("+++++++++++++++ Seq: " + m_receive_seq + " NEW SEQ: " + streamPacket.getSequenceNumber() );
-				System.out.println("+++++++++++++++ Ack: " + m_receive_ack + " NEW ACK: " + streamPacket.getAcknowledgementNumber() );
-				System.out.println("+++++++++++++++ Prev Ack: " + prev_ack );
-				prev_ack = m_receive_ack;
-
+				// Update the acknowledgement number
+				prevAck = m_receiveAck;
 				
 				if (m_toAddr != null) {
-					System.out.println("curIndex: " + curIndex + ", len " + len);
-					// send the ack packet to the sender
-
-					// If the checksum is not the same, we request a new packet.
-					if (!MessageDigest.isEqual(packetChecksum, dataChecksum)) {
-						System.err.println("CHECKSUM ERROR");	
-						// reset the curIndex 
+					// If the checksum does not match, reset the index and do not send the ACK packet back
+					if (!MessageDigest.isEqual(packetChecksum, dataChecksum)) {	
 						curIndex = 0;
-						continue;
-						//m_ackPacket = new S_StreamPacket(0, STATE_ERR, m_ack, m_seq, dataChecksum, null, false); 
-					}
-					else if (len == 0 || curIndex < len) {
-						if (streamPacket.getAcknowledgementNumber() != m_receive_ack) {
-							m_receive_ack = streamPacket.getAcknowledgementNumber();	
-							m_receive_seq = streamPacket.getSequenceNumber() + curIndex + 1;
+						continue;						
+					} else if (len == 0 || curIndex < len) {
+						// Send the ACK request back to acknowledge packet is received.
+						if (streamPacket.getAcknowledgementNumber() != m_receiveAck) {
+							m_receiveAck = streamPacket.getAcknowledgementNumber();	
+							m_receiveSeq = streamPacket.getSequenceNumber() + curIndex + 1;
 						} 
-						System.err.println("RECEIVE SENDING SHIT BACK TO SAY I GOT CRAP WITH SEQ: " + m_receive_seq + " ACK: " + m_receive_ack);
-						m_ackPacket = new S_StreamPacket(0, m_state, m_receive_ack, m_receive_seq, null, null, false); 
+						m_ackPacket = new S_StreamPacket(streamPacket.getId(), m_state, m_receiveAck, m_receiveSeq, null, null, false); 
 						m_ackPacket.setChecksum( calculatePacketChecksum( m_ackPacket ) );
-					} 
-					else {
-						System.err.println("ERROR IN S_RECEIVE");	
-						// TODO: Why is this the same?! WTF!?
-						/*m_ack = streamPacket.getAcknowledgementNumber();		
-						m_seq = streamPacket.getSequenceNumber();
-						m_ackPacket = new S_StreamPacket(0, m_state, m_ack, m_seq, null, null, false); 
-						m_ackPacket.setChecksum( calculatePacketChecksum( m_ackPacket ) );*/
 						
+						ackPacketBytes = objectToBytes(m_ackPacket);
+						m_socket.T_sendto(ackPacketBytes, ackPacketBytes.length, m_toAddr);
+					} else {		
 						continue;
 					}
-					
-					ackPacketBytes = objectToBytes(m_ackPacket);
-					m_socket.T_sendto(ackPacketBytes, ackPacketBytes.length, m_toAddr);
 				}
 
-				// check if there is any more data and that the correct packet is received
-				/*if( !streamPacket.getMP() ) {
-					if (streamPacket != null && prev_ack != m_ack) {
-						break;
-					} else {
-						curIndex = 0;
-					}
-				} */
-				if( streamPacket != null && !streamPacket.getMP() && prev_ack != m_receive_ack) { break; }
+				// Exit if there is no more packets to receive
+				if( streamPacket != null && !streamPacket.getMP() && prevAck != m_receiveAck) { break; }
+			} catch (Exception e) {
 			}
-		} catch (Exception e)
-		{
-			System.out.println("RECIEVE ERROR! " + e.getMessage());
-		}
+		} 
 		
 		System.out.println("done receive");
 		return curIndex;
@@ -444,10 +364,10 @@ class S_StreamSocket
     {
         // reset variables (similar to constructor)
 		m_state = S_StreamSocket.STATE_CLD;
-		m_send_seq = 0;
-		m_send_ack = 0;
+		m_sendSeq = 0;
+		m_sendAck = 0;
 
-        S_StreamPacket packet = new S_StreamPacket(0, m_state, m_send_seq, m_send_ack, null, null, false);
+        S_StreamPacket packet = new S_StreamPacket(0, m_state, m_sendSeq, m_sendAck, null, null, false);
         byte[] packet_bytes = objectToBytes(packet); 
 		try {
 			m_socket.T_sendto(packet_bytes, packet_bytes.length, m_toAddr);
@@ -485,7 +405,6 @@ class S_StreamSocket
 			
 			result = bs.toByteArray();
 		} catch (IOException e) {
-			System.err.println("ERROR1: " + e.getMessage());
 		}
 		return result;
 	}
@@ -509,7 +428,6 @@ class S_StreamSocket
 			os.close();
 			bs.close();
 		} catch (Exception e) {
-			System.err.println("bytesToObject FAILING US! " + e.getMessage());
 		}
 
 		return result;

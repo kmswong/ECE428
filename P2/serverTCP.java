@@ -156,6 +156,14 @@ public class serverTCP
 		for( int x = 0; x < listOfPlayers.size(); x++ )
 		{
 			String[] playerAndCountry = ((String)listOfPlayers.get(x)).split(" ");
+			
+			System.out.println(playerAndCountry.length);
+			
+			for(int y = 0; y < playerAndCountry.length; y++ ) {
+				System.out.println(playerAndCountry[y]);
+			}
+			System.out.println();	
+				
 			if( playerAndCountry[1].equals( country ) )
 			{
 				listOfPlayersInCountry.add( playerAndCountry[0] );
