@@ -1,4 +1,4 @@
-JFLAGS = -g
+JFLAGS = -g -1.6
 JC = javac
 P = 1 
 CLASSPATH = ./
