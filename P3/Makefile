@@ -1,6 +1,5 @@
 JFLAGS = -g -1.6
 JC = javac
-P = 1 
 CLASSPATH = ./
 .SUFFIXES: .java .class
 .java.class:
@@ -14,9 +13,7 @@ default: classes
 classes: $(CLASSES:.java=.class)
 
 run1: classes
-	java p3server &
-	sleep 1
-	/home/tripunit/p3client -s $(P) -f 1 -n 1
+	java p3server 
 
 run2: classes
 	java p3server &

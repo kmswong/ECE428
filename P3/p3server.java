@@ -28,7 +28,27 @@ public class p3server
 		}
 		
 		// write the port number to the environemnt variable P
-		//(serverSocket.getLocalPort());
+		//String command = "set P=" + serverSocket.getLocalPort();
+		String command = "rm -f temp";
+		System.out.println(serverSocket.getLocalPort());
+
+		try {
+			Integer port = new Integer(serverSocket.getLocalPort());
+			ProcessBuilder pb = new ProcessBuilder( "/home/tripunit/p3client", "-s", port.toString(), "-f", "0", "-n", "0");
+			Process p = pb.start();
+
+			/*BufferedReader br = new BufferedReader( new InputStreamReader(p.getInputStream()));
+			System.out.println("began reader..");
+			String line = null;
+			while((line = br.readLine()) != null )
+				System.out.println(line);
+
+				System.out.println( "done");*/
+		} catch (Exception e) {
+			System.err.println( e.getMessage() );
+		}
+
+		System.out.println("Receiving~~");
 		
 		String country = "";
 		DatagramPacket packet = null;
@@ -42,6 +62,7 @@ public class p3server
 				serverSocket.receive(packet);
 
 				String receivedData = new String(packet.getData());
+				System.out.println( receivedData);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
