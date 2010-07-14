@@ -102,7 +102,25 @@ public class p3server
 					String decipheredStr = new String( deciphered );
 					
 					if( pCheck( deciphered ) ) {
-				
+						int decipheredStrSize = decipheredStr.length();
+						for (int i  = 0; i < NUM_CHAR_CHECK && i < decipheredStrSize; ++i) {
+							String decipheredChar = String.valueOf(decipheredStr.charAt(i));
+							if (charMap.get(decipheredChar) == null) {
+								//TODO: invalid char!!!!!
+								System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@ invalid char: " + decipheredChar + "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+							}
+						}
+						
+						String[] decipheredWords = decipheredStr.split(" ");
+						int decipheredWordsSize = decipheredWords.length;
+						for (int i  = 0; i < NUM_WORD_CHECK && i < decipheredWordsSize; ++i) {
+							String decipheredWord = decipheredWords[i];
+							if (wordMap.get(decipheredWord.trim()) == null) {
+								//TODO: invalid word!!!!!
+								System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@ invalid word: " + decipheredWord + "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+							}
+						}
+						
 						System.out.println(decipheredStr);
 						System.out.println();
 					}
