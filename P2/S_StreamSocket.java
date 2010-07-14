@@ -8,7 +8,6 @@
 import java.io.*;
 import java.net.*;
 import java.security.*;
-import java.util.*;
 
 import ece428.socket.*;
 
@@ -28,9 +27,8 @@ class S_StreamSocket
 	private int m_receiveAck;
 	private S_StreamPacket m_ackPacket;
 	
-	private final int CHUNK_SIZE = 1000; // The chunk size in bytes
+	private final int CHUNK_SIZE = 500; // The chunk size in bytes
 	private final int RECEIVE_PACKET_SIZE = 1200;
-	private final int START_SEQ_NUM = 0;
 	private final int MAX_SEND_ATTEMPTS = 50; 
 	private final String IP = "127.0.0.1";
 	
@@ -44,7 +42,7 @@ class S_StreamSocket
 	
 	private static final String DIGEST_ALGORITHM_NAME = "MD5";
 	
-	private final int TIMEOUT = 500;
+	private final int TIMEOUT = 200;
 
     /** 
 	 * Constructor. 
@@ -186,7 +184,6 @@ class S_StreamSocket
 		
 		// Stream Packet Info
 		S_StreamPacket packet;
-		byte[] checksum;
 		byte[] packet_bytes;			// serialized version of packet
 		m_id++;							// Increase the ID of the packet being sent
 		

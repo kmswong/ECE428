@@ -1,3 +1,3 @@
-java serverTCPOneWay > /dev/null &
+java -Xms256m -Xmx512m serverTCPOneWay > /dev/null &
 sleep 1
-java clientTCPOneWay data/20k.dat > /dev/null
+java -Xms256m -Xmx512m clientTCPOneWay data/1k.dat > /dev/null

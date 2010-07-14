@@ -10,17 +10,26 @@ import java.math.BigInteger;
 import java.net.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
+import java.util.*;
 
 public class p3server 
 {
 	private static final int ERROR_CODE = -1;
 	private static final String TXT_KEY_CHANGE = "KEY CHANGE";
+	private static final String FILENAME_WORDS = "hamlet_word_out.txt";
+	private static final String FILENAME_CHARS = "hamlet_char_out.txt";
+	private static final int NUM_WORD_CHECK = 5;
+	private static final int NUM_CHAR_CHECK = 10;
 	
 	public static void main(String[] args) throws IOException {
 	
 		int f = Integer.parseInt(args[0]);
 		int n = Integer.parseInt(args[1]);
 		DatagramSocket serverSocket = null;
+		
+		HashMap<String, Integer> wordMap = getWordMap(FILENAME_WORDS);
+		HashMap<String, Integer> charMap = getWordMap(FILENAME_CHARS);
+		
 		try 
 		{
 		    serverSocket = new DatagramSocket();
@@ -90,9 +99,11 @@ public class p3server
 
 					c.init( Cipher.DECRYPT_MODE, new SecretKeySpec( key, "AES" ), ivs );
 					byte[] deciphered = c.doFinal( byteToDecrypt  );
-
+					String decipheredStr = new String( deciphered );
+					
 					if( pCheck( deciphered ) ) {
-						System.out.println( new String( deciphered ) );
+				
+						System.out.println(decipheredStr);
 						System.out.println();
 					}
 				} while ( cg.hasMore() );
@@ -142,5 +153,32 @@ public class p3server
 		}
 		
 		return false;
+	}
+	
+	private static HashMap<String, Integer> getWordMap(String filename)
+	{
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		
+		try
+		{
+			FileInputStream fstream = new FileInputStream(filename);
+			DataInputStream in = new DataInputStream(fstream);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+			
+			//Read File Line By Line
+			while ((strLine = br.readLine()) != null)   {
+				map.put(strLine.trim(), 0);
+			}
+			
+			//Close the input stream
+			in.close();
+		}
+		catch (Exception e){//Catch exception if any
+			  System.err.println("Error: " + e.getMessage());
+		}
+		
+		return map;
+	  
 	}
 }
