@@ -1,4 +1,4 @@
-JFLAGS = -g -1.6
+JFLAGS = -g -target 1.6
 JC = javac
 CLASSPATH = ./
 .SUFFIXES: .java .class
@@ -7,6 +7,7 @@ CLASSPATH = ./
 
 CLASSES = \
 	CombinationGenerator.java \
+	Worker.java \
 	p3server.java 
 
 default: classes

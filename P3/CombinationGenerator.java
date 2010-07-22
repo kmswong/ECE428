@@ -69,6 +69,10 @@ private static BigInteger getFactorial (int n) {
 // Generate next combination (algorithm from Rosen p. 286)
 //--------------------------------------------------------
 public int[] getNext () {
+	if (!this.hasMore()) {
+		return null;
+	}
+	
 	if (numLeft.equals (total)) {
 	 numLeft = numLeft.subtract (BigInteger.ONE);
 	 return a;
@@ -82,6 +86,27 @@ public int[] getNext () {
 	 a[j] = a[i] + j - i;
 	}
 	numLeft = numLeft.subtract (BigInteger.ONE);
+
 	return a;
+}
+
+public int getHighestPos() {
+	int result = -1;
+	for (int i = 0; i < r; i++) {
+		if (result < a[i]) {
+			result = a[i];
+		}
+	}
+	return result;
+}
+
+public int getLowestPos() {
+	int result = this.n;
+	for (int i = 0; i < r; i++) {
+		if (result > a[i]) {
+			result = a[i];
+		}
+	}
+	return result;
 }
 }

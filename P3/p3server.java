@@ -24,8 +24,7 @@ public class p3server
 	private static final String TXT_KEY_CHANGE = "KEY CHANGE";
 	private static final String FILENAME_WORDS = "hamlet_word_out.txt";
 	private static final String FILENAME_OUTDAT = "out.dat";
-	private static final int NUM_WORD_CHECK = 5;
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	
 	public static void main(String[] args) throws IOException {
 		int f = Integer.parseInt(args[0]);
@@ -69,6 +68,7 @@ public class p3server
 			
 			byte[] buf = null; 
 
+
 			byte[] iv = new byte[16];
 			for( int i = 0; i < 16; i++ ) {
 				iv[i] = 0;
@@ -105,51 +105,26 @@ public class p3server
 				
 				if (correctKey == null) {
 					cg.reset();
-					do {
-						// Decrypt the receive packet with the next generated key
-						byte[] key = nextKey(cg);
-						c.init( Cipher.DECRYPT_MODE, new SecretKeySpec( key, "AES" ), ivs );
-						byte[] deciphered = c.doFinal( byteToDecrypt  );
-						String decipheredStr = new String( deciphered );
-						
-						if (DEBUG) {
-							/*
-							System.out.println();
-							System.out.println("Deciphered Text *************************************");					
-							System.out.println(decipheredStr);
-							*/
-						}
-						
-						boolean check = pCheck( deciphered );
-						
-						if (DEBUG) {
-							System.out.println("pCheck: " + check);
-						}
-						
-						// Do char and word checking.
-						if( check && isPureAscii(decipheredStr)) {							
-							boolean wordCheck = true;
-							
-							String[] decipheredWords = decipheredStr.split(" ");
-							int decipheredWordsSize = decipheredWords.length;
-							for (int i  = 1; i < NUM_WORD_CHECK + 1 && i < decipheredWordsSize; ++i) {
-								String decipheredWord = decipheredWords[i].replace('\r',' ').trim().toLowerCase();
-								
-								if (!wordMap.containsKey(decipheredWord)) {
-									//TODO: invalid word!!!!!
-									wordCheck = false;
-									//System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@ invalid word: " + decipheredWord + "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-								}
-							}
-							
-							if (wordCheck)
-							{
-								correctKey = key;
-								break;
-							}
-						}
-					} while ( cg.hasMore() );
+
+					//spawn off one sequential worker thread and one random worker thread to get the key					
+					Worker seqWorker = new Worker(0, 128, n, cg, byteToDecrypt, wordMap);
+					Thread seqThread = new Thread(seqWorker);
+					
+					//Worker randWorker = new RandomKeyWorker(1, 128, n, cg, byteToDecrypt, wordMap);
+					//Thread randThread = new Thread(randWorker);
+					
+					// all the workers have to initialize before any of them are start
+					seqThread.start();
+					//randThread.start();
+					
+					//randThread.join();
+					seqThread.join();
+					correctKey = seqWorker.getKey();
+					//if (correctKey == null) {
+					//	correctKey = randWorker.getKey();
+					//}					
 				}
+				
 				
 				if (correctKey != null) {
 					c.init( Cipher.DECRYPT_MODE, new SecretKeySpec( correctKey, "AES" ), ivs );
@@ -166,9 +141,10 @@ public class p3server
 						System.out.println(decipheredStr);
 						System.out.println("I HAVE DECIPHERED THE TEXT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 					}
+				} else {
+					// At this point, we failed to find the key
+					//toOutputFile.write("I'M A NOOB!");
 				}
-				// At this point, we failed to find the key
-				//toOutputFile.write("I'M A NOOB!");
 			}
 		} 
 		catch (Exception e) 
@@ -178,61 +154,6 @@ public class p3server
 		{
 			toOutputFile.close();
 		}
-	}
-	
-	private static byte[] nextKey(CombinationGenerator cg)
-	{
-		int[] nextKeyInt = cg.getNext();
-
-		byte[] retKey = new byte[ 16 ];
-		
-		for( int i = 0; i < 16; i++ ) {
-			retKey[i] = -1;
-		}
-
-		for (int i = 0; i < nextKeyInt.length; i++)
-		{
-			int pos = nextKeyInt[i];
-			retKey[ pos / 8 ] = (byte)(retKey[ pos / 8 ] & (byte)( 255 - Math.pow( 2, 8 - pos % 8 - 1)));
-		}
-
-		return retKey;
-	}
-
-	public static boolean isPureAscii(String v) {
-		byte bytearray []  = v.getBytes();
-		CharsetDecoder d = Charset.forName("US-ASCII").newDecoder();
-		try {
-			CharBuffer r = d.decode(ByteBuffer.wrap(bytearray));
-			r.toString();
-		}
-		catch(CharacterCodingException e) {
-			return false;
-		}
-		return true;
-	}
-
-  
-	private static boolean pCheck(byte[] data)
-	{
-		int dataLength = data.length;
-		if (dataLength < 2) 
-		{
-			return false;
-		}
-		
-		Byte origPByte = new Byte(data[0]);
-		byte newPByte = data[1];
-		for (int i = 2; i < dataLength; i++) 
-		{
-			newPByte = (byte)(newPByte ^ data[i]);
-		}
-		
-		if (origPByte.equals(newPByte)) {
-			return true;
-		}
-		
-		return false;
 	}
 	
 	private static HashMap<String, Integer> getWordMap(String filename)
@@ -261,4 +182,7 @@ public class p3server
 		return map;
 	  
 	}
+
 }
+
+
